@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+        <title>Home Page of Helio Perroni Filho</title>
+        <meta charset="utf-8" />
+        <link href="/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Home Page of Helio Perroni Filho Full Atom Feed" />
+        <link href="/feeds/code.atom.xml" type="application/atom+xml" rel="alternate" title="Home Page of Helio Perroni Filho Categories Atom Feed" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="/theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="/theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="/theme/pygment.css" />
+        <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+
+        <script src="/theme/js/libs/modernizr-2.6.2.min.js"></script>
+
+
+
+
+</head>
+
+<body id="index" class="home">
+
+
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1><a href="/">Home Page of Helio Perroni Filho <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+
+              <ul class="columns">
+                <li><a href="/">Home</a></li>
+
+                <li><a href="/posts.html">Posts</a></li>
+                <li><a href="/pages/projects.html">Projects</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+
+   <div class="row">
+        <div class="eleven columns">
+
+
+            <header>
+              <h2 class="entry-title">
+                <a href="/controlling-a-differential-drive-robot-in-gazebo-from-ros.html" rel="bookmark"
+                   title="Permalink to Controlling a differential drive robot in Gazebo from ROS">Controlling a differential drive robot in Gazebo from ROS</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2015-05-21T21:12:00-04:00">
+                Thu 21 May 2015
+              </abbr>
+              <address class="vcard author">By 
+                <a class="url fn" href="/author/helio-perroni-filho.html"> Helio Perroni Filho</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <p><a href="http://gazebosim.org/">Gazebo</a> is a simulation suite targeted at robotics projects, used by DARPA to implement the virtual part of its <a href="http://spectrum.ieee.org/automaton/robotics/robotics-software/osrf-prepares-for-darpa-virtual-robotics-challenge">Robotics Challenge</a>. It's a great companion to the <a href="http://www.ros.org/">Robot Operating System</a>, supporting <a href="http://gazebosim.org/tutorials?cat=connect_ros">several ways</a> to interface with it.</p>
+<p>One recurrent question regarding Gazebo is how to control robots described in <a href="http://sdformat.org/">Simulation Description Format (SDF)</a> models from ROS. The more involved case of <a href="http://gazebosim.org/tutorials?tut=ros_urdf&amp;cat=connect_ros">porting a URDF model to Gazebo</a> and <a href="http://gazebosim.org/tutorials?tut=ros_control&amp;cat=connect_ros">manipulating it through ROS Control</a> interfaces is well documented, but what about a robot that already has a full SDF model available? Isn't it possible to just paste it into a Gazebo workspace and get some ROS topics to manipulate it?</p>
+<p>The tutorial below covers this simpler case. It is based on the SDF model for the <a href="http://www-lar.deis.unibo.it/equipments/p2dx/">Pioneer 2DX</a> differential drive robot, which is available from Gazebo's default library. It also assumes ROS and Gazebo are already installed, as well as the necessary <a href="http://gazebosim.org/tutorials?tut=ros_installing&amp;cat=connect_ros">integration packages</a> and <a href="http://gazebosim.org/tutorials?tut=ros_gzplugins&amp;cat=connect_ros">plugins</a>.</p>
+<p>First, save the SDF world model below to your local filesystem as <code>pioneer2dx_ros.world</code>:</p>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>  1
+  2
+  3
+  4
+  5
+  6
+  7
+  8
+  9
+ 10
+ 11
+ 12
+ 13
+ 14
+ 15
+ 16
+ 17
+ 18
+ 19
+ 20
+ 21
+ 22
+ 23
+ 24
+ 25
+ 26
+ 27
+ 28
+ 29
+ 30
+ 31
+ 32
+ 33
+ 34
+ 35
+ 36
+ 37
+ 38
+ 39
+ 40
+ 41
+ 42
+ 43
+ 44
+ 45
+ 46
+ 47
+ 48
+ 49
+ 50
+ 51
+ 52
+ 53
+ 54
+ 55
+ 56
+ 57
+ 58
+ 59
+ 60
+ 61
+ 62
+ 63
+ 64
+ 65
+ 66
+ 67
+ 68
+ 69
+ 70
+ 71
+ 72
+ 73
+ 74
+ 75
+ 76
+ 77
+ 78
+ 79
+ 80
+ 81
+ 82
+ 83
+ 84
+ 85
+ 86
+ 87
+ 88
+ 89
+ 90
+ 91
+ 92
+ 93
+ 94
+ 95
+ 96
+ 97
+ 98
+ 99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+326
+327
+328
+329
+330
+331
+332
+333
+334
+335
+336
+337
+338
+339
+340
+341
+342
+343
+344
+345
+346
+347
+348
+349
+350
+351
+352
+353
+354
+355
+356
+357
+358
+359
+360
+361
+362
+363
+364
+365
+366
+367
+368
+369
+370
+371
+372
+373</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">&lt;?xml version=&quot;1.0&quot; ?&gt;</span>
+<span class="nt">&lt;sdf</span> <span class="na">version=</span><span class="s">&quot;1.4&quot;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;world</span> <span class="na">name=</span><span class="s">&quot;default&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;light</span> <span class="na">name=</span><span class="s">&quot;sun&quot;</span> <span class="na">type=</span><span class="s">&quot;directional&quot;</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;cast_shadows&gt;</span>1<span class="nt">&lt;/cast_shadows&gt;</span>
+      <span class="nt">&lt;pose&gt;</span>0 0 10 0 -0 0<span class="nt">&lt;/pose&gt;</span>
+      <span class="nt">&lt;diffuse&gt;</span>0.8 0.8 0.8 1<span class="nt">&lt;/diffuse&gt;</span>
+      <span class="nt">&lt;specular&gt;</span>0.2 0.2 0.2 1<span class="nt">&lt;/specular&gt;</span>
+      <span class="nt">&lt;attenuation&gt;</span>
+        <span class="nt">&lt;range&gt;</span>1000<span class="nt">&lt;/range&gt;</span>
+        <span class="nt">&lt;constant&gt;</span>0.9<span class="nt">&lt;/constant&gt;</span>
+        <span class="nt">&lt;linear&gt;</span>0.01<span class="nt">&lt;/linear&gt;</span>
+        <span class="nt">&lt;quadratic&gt;</span>0.001<span class="nt">&lt;/quadratic&gt;</span>
+      <span class="nt">&lt;/attenuation&gt;</span>
+      <span class="nt">&lt;direction&gt;</span>-0.5 0.1 -0.9<span class="nt">&lt;/direction&gt;</span>
+    <span class="nt">&lt;/light&gt;</span>
+    <span class="nt">&lt;model</span> <span class="na">name=</span><span class="s">&quot;ground_plane&quot;</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;static&gt;</span>1<span class="nt">&lt;/static&gt;</span>
+      <span class="nt">&lt;link</span> <span class="na">name=</span><span class="s">&quot;link&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;collision</span> <span class="na">name=</span><span class="s">&quot;collision&quot;</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;geometry&gt;</span>
+            <span class="nt">&lt;plane&gt;</span>
+              <span class="nt">&lt;normal&gt;</span>0 0 1<span class="nt">&lt;/normal&gt;</span>
+              <span class="nt">&lt;size&gt;</span>100 100<span class="nt">&lt;/size&gt;</span>
+            <span class="nt">&lt;/plane&gt;</span>
+          <span class="nt">&lt;/geometry&gt;</span>
+          <span class="nt">&lt;surface&gt;</span>
+            <span class="nt">&lt;friction&gt;</span>
+              <span class="nt">&lt;ode&gt;</span>
+                <span class="nt">&lt;mu&gt;</span>100<span class="nt">&lt;/mu&gt;</span>
+                <span class="nt">&lt;mu2&gt;</span>50<span class="nt">&lt;/mu2&gt;</span>
+              <span class="nt">&lt;/ode&gt;</span>
+            <span class="nt">&lt;/friction&gt;</span>
+            <span class="nt">&lt;bounce/&gt;</span>
+            <span class="nt">&lt;contact&gt;</span>
+              <span class="nt">&lt;ode/&gt;</span>
+            <span class="nt">&lt;/contact&gt;</span>
+          <span class="nt">&lt;/surface&gt;</span>
+          <span class="nt">&lt;max_contacts&gt;</span>10<span class="nt">&lt;/max_contacts&gt;</span>
+        <span class="nt">&lt;/collision&gt;</span>
+        <span class="nt">&lt;visual</span> <span class="na">name=</span><span class="s">&quot;visual&quot;</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;cast_shadows&gt;</span>0<span class="nt">&lt;/cast_shadows&gt;</span>
+          <span class="nt">&lt;geometry&gt;</span>
+            <span class="nt">&lt;plane&gt;</span>
+              <span class="nt">&lt;normal&gt;</span>0 0 1<span class="nt">&lt;/normal&gt;</span>
+              <span class="nt">&lt;size&gt;</span>100 100<span class="nt">&lt;/size&gt;</span>
+            <span class="nt">&lt;/plane&gt;</span>
+          <span class="nt">&lt;/geometry&gt;</span>
+          <span class="nt">&lt;material&gt;</span>
+            <span class="nt">&lt;script&gt;</span>
+              <span class="nt">&lt;uri&gt;</span>file://media/materials/scripts/gazebo.material<span class="nt">&lt;/uri&gt;</span>
+              <span class="nt">&lt;name&gt;</span>Gazebo/Grey<span class="nt">&lt;/name&gt;</span>
+            <span class="nt">&lt;/script&gt;</span>
+          <span class="nt">&lt;/material&gt;</span>
+        <span class="nt">&lt;/visual&gt;</span>
+        <span class="nt">&lt;velocity_decay&gt;</span>
+          <span class="nt">&lt;linear&gt;</span>0<span class="nt">&lt;/linear&gt;</span>
+          <span class="nt">&lt;angular&gt;</span>0<span class="nt">&lt;/angular&gt;</span>
+        <span class="nt">&lt;/velocity_decay&gt;</span>
+        <span class="nt">&lt;self_collide&gt;</span>0<span class="nt">&lt;/self_collide&gt;</span>
+        <span class="nt">&lt;kinematic&gt;</span>0<span class="nt">&lt;/kinematic&gt;</span>
+        <span class="nt">&lt;gravity&gt;</span>1<span class="nt">&lt;/gravity&gt;</span>
+      <span class="nt">&lt;/link&gt;</span>
+    <span class="nt">&lt;/model&gt;</span>
+    <span class="nt">&lt;physics</span> <span class="na">type=</span><span class="s">&quot;ode&quot;</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;max_step_size&gt;</span>0.001<span class="nt">&lt;/max_step_size&gt;</span>
+      <span class="nt">&lt;real_time_factor&gt;</span>1<span class="nt">&lt;/real_time_factor&gt;</span>
+      <span class="nt">&lt;real_time_update_rate&gt;</span>1000<span class="nt">&lt;/real_time_update_rate&gt;</span>
+      <span class="nt">&lt;gravity&gt;</span>0 0 -9.8<span class="nt">&lt;/gravity&gt;</span>
+    <span class="nt">&lt;/physics&gt;</span>
+    <span class="nt">&lt;scene&gt;</span>
+      <span class="nt">&lt;ambient&gt;</span>0.4 0.4 0.4 1<span class="nt">&lt;/ambient&gt;</span>
+      <span class="nt">&lt;background&gt;</span>0.7 0.7 0.7 1<span class="nt">&lt;/background&gt;</span>
+      <span class="nt">&lt;shadows&gt;</span>1<span class="nt">&lt;/shadows&gt;</span>
+    <span class="nt">&lt;/scene&gt;</span>
+    <span class="nt">&lt;spherical_coordinates&gt;</span>
+      <span class="nt">&lt;surface_model&gt;</span>EARTH_WGS84<span class="nt">&lt;/surface_model&gt;</span>
+      <span class="nt">&lt;latitude_deg&gt;</span>0<span class="nt">&lt;/latitude_deg&gt;</span>
+      <span class="nt">&lt;longitude_deg&gt;</span>0<span class="nt">&lt;/longitude_deg&gt;</span>
+      <span class="nt">&lt;elevation&gt;</span>0<span class="nt">&lt;/elevation&gt;</span>
+      <span class="nt">&lt;heading_deg&gt;</span>0<span class="nt">&lt;/heading_deg&gt;</span>
+    <span class="nt">&lt;/spherical_coordinates&gt;</span>
+    <span class="nt">&lt;model</span> <span class="na">name=</span><span class="s">&quot;pioneer2dx&quot;</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;link</span> <span class="na">name=</span><span class="s">&quot;chassis&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;pose&gt;</span>0 0 0.16 0 -0 0<span class="nt">&lt;/pose&gt;</span>
+        <span class="nt">&lt;inertial&gt;</span>
+          <span class="nt">&lt;mass&gt;</span>5.67<span class="nt">&lt;/mass&gt;</span>
+          <span class="nt">&lt;inertia&gt;</span>
+            <span class="nt">&lt;ixx&gt;</span>0.07<span class="nt">&lt;/ixx&gt;</span>
+            <span class="nt">&lt;iyy&gt;</span>0.08<span class="nt">&lt;/iyy&gt;</span>
+            <span class="nt">&lt;izz&gt;</span>0.1<span class="nt">&lt;/izz&gt;</span>
+            <span class="nt">&lt;ixy&gt;</span>0<span class="nt">&lt;/ixy&gt;</span>
+            <span class="nt">&lt;ixz&gt;</span>0<span class="nt">&lt;/ixz&gt;</span>
+            <span class="nt">&lt;iyz&gt;</span>0<span class="nt">&lt;/iyz&gt;</span>
+          <span class="nt">&lt;/inertia&gt;</span>
+        <span class="nt">&lt;/inertial&gt;</span>
+        <span class="nt">&lt;collision</span> <span class="na">name=</span><span class="s">&quot;collision&quot;</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;geometry&gt;</span>
+            <span class="nt">&lt;box&gt;</span>
+              <span class="nt">&lt;size&gt;</span>0.445 0.277 0.17<span class="nt">&lt;/size&gt;</span>
+            <span class="nt">&lt;/box&gt;</span>
+          <span class="nt">&lt;/geometry&gt;</span>
+          <span class="nt">&lt;max_contacts&gt;</span>10<span class="nt">&lt;/max_contacts&gt;</span>
+          <span class="nt">&lt;surface&gt;</span>
+            <span class="nt">&lt;bounce/&gt;</span>
+            <span class="nt">&lt;friction&gt;</span>
+              <span class="nt">&lt;ode/&gt;</span>
+            <span class="nt">&lt;/friction&gt;</span>
+            <span class="nt">&lt;contact&gt;</span>
+              <span class="nt">&lt;ode/&gt;</span>
+            <span class="nt">&lt;/contact&gt;</span>
+          <span class="nt">&lt;/surface&gt;</span>
+        <span class="nt">&lt;/collision&gt;</span>
+        <span class="nt">&lt;collision</span> <span class="na">name=</span><span class="s">&quot;castor_collision&quot;</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;pose&gt;</span>-0.2 0 -0.12 0 -0 0<span class="nt">&lt;/pose&gt;</span>
+          <span class="nt">&lt;geometry&gt;</span>
+            <span class="nt">&lt;sphere&gt;</span>
+              <span class="nt">&lt;radius&gt;</span>0.04<span class="nt">&lt;/radius&gt;</span>
+            <span class="nt">&lt;/sphere&gt;</span>
+          <span class="nt">&lt;/geometry&gt;</span>
+          <span class="nt">&lt;surface&gt;</span>
+            <span class="nt">&lt;friction&gt;</span>
+              <span class="nt">&lt;ode&gt;</span>
+                <span class="nt">&lt;mu&gt;</span>0<span class="nt">&lt;/mu&gt;</span>
+                <span class="nt">&lt;mu2&gt;</span>0<span class="nt">&lt;/mu2&gt;</span>
+                <span class="nt">&lt;slip1&gt;</span>1<span class="nt">&lt;/slip1&gt;</span>
+                <span class="nt">&lt;slip2&gt;</span>1<span class="nt">&lt;/slip2&gt;</span>
+              <span class="nt">&lt;/ode&gt;</span>
+            <span class="nt">&lt;/friction&gt;</span>
+            <span class="nt">&lt;bounce/&gt;</span>
+            <span class="nt">&lt;contact&gt;</span>
+              <span class="nt">&lt;ode/&gt;</span>
+            <span class="nt">&lt;/contact&gt;</span>
+          <span class="nt">&lt;/surface&gt;</span>
+          <span class="nt">&lt;max_contacts&gt;</span>10<span class="nt">&lt;/max_contacts&gt;</span>
+        <span class="nt">&lt;/collision&gt;</span>
+        <span class="nt">&lt;visual</span> <span class="na">name=</span><span class="s">&quot;visual&quot;</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;pose&gt;</span>0 0 0.04 0 -0 0<span class="nt">&lt;/pose&gt;</span>
+          <span class="nt">&lt;geometry&gt;</span>
+            <span class="nt">&lt;mesh&gt;</span>
+              <span class="nt">&lt;uri&gt;</span>model://pioneer2dx/meshes/chassis.dae<span class="nt">&lt;/uri&gt;</span>
+            <span class="nt">&lt;/mesh&gt;</span>
+          <span class="nt">&lt;/geometry&gt;</span>
+        <span class="nt">&lt;/visual&gt;</span>
+        <span class="nt">&lt;visual</span> <span class="na">name=</span><span class="s">&quot;castor_visual&quot;</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;pose&gt;</span>-0.2 0 -0.12 0 -0 0<span class="nt">&lt;/pose&gt;</span>
+          <span class="nt">&lt;geometry&gt;</span>
+            <span class="nt">&lt;sphere&gt;</span>
+              <span class="nt">&lt;radius&gt;</span>0.04<span class="nt">&lt;/radius&gt;</span>
+            <span class="nt">&lt;/sphere&gt;</span>
+          <span class="nt">&lt;/geometry&gt;</span>
+          <span class="nt">&lt;material&gt;</span>
+            <span class="nt">&lt;script&gt;</span>
+              <span class="nt">&lt;uri&gt;</span>file://media/materials/scripts/gazebo.material<span class="nt">&lt;/uri&gt;</span>
+              <span class="nt">&lt;name&gt;</span>Gazebo/FlatBlack<span class="nt">&lt;/name&gt;</span>
+            <span class="nt">&lt;/script&gt;</span>
+          <span class="nt">&lt;/material&gt;</span>
+        <span class="nt">&lt;/visual&gt;</span>
+        <span class="nt">&lt;velocity_decay&gt;</span>
+          <span class="nt">&lt;linear&gt;</span>0<span class="nt">&lt;/linear&gt;</span>
+          <span class="nt">&lt;angular&gt;</span>0<span class="nt">&lt;/angular&gt;</span>
+        <span class="nt">&lt;/velocity_decay&gt;</span>
+        <span class="nt">&lt;self_collide&gt;</span>0<span class="nt">&lt;/self_collide&gt;</span>
+        <span class="nt">&lt;kinematic&gt;</span>0<span class="nt">&lt;/kinematic&gt;</span>
+        <span class="nt">&lt;gravity&gt;</span>1<span class="nt">&lt;/gravity&gt;</span>
+      <span class="nt">&lt;/link&gt;</span>
+      <span class="nt">&lt;link</span> <span class="na">name=</span><span class="s">&quot;right_wheel&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;pose&gt;</span>0.1 -0.17 0.11 0 1.5707 1.5707<span class="nt">&lt;/pose&gt;</span>
+        <span class="nt">&lt;inertial&gt;</span>
+          <span class="nt">&lt;mass&gt;</span>1.5<span class="nt">&lt;/mass&gt;</span>
+          <span class="nt">&lt;inertia&gt;</span>
+            <span class="nt">&lt;ixx&gt;</span>0.0051<span class="nt">&lt;/ixx&gt;</span>
+            <span class="nt">&lt;iyy&gt;</span>0.0051<span class="nt">&lt;/iyy&gt;</span>
+            <span class="nt">&lt;izz&gt;</span>0.009<span class="nt">&lt;/izz&gt;</span>
+            <span class="nt">&lt;ixy&gt;</span>0<span class="nt">&lt;/ixy&gt;</span>
+            <span class="nt">&lt;ixz&gt;</span>0<span class="nt">&lt;/ixz&gt;</span>
+            <span class="nt">&lt;iyz&gt;</span>0<span class="nt">&lt;/iyz&gt;</span>
+          <span class="nt">&lt;/inertia&gt;</span>
+        <span class="nt">&lt;/inertial&gt;</span>
+        <span class="nt">&lt;collision</span> <span class="na">name=</span><span class="s">&quot;collision&quot;</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;geometry&gt;</span>
+            <span class="nt">&lt;cylinder&gt;</span>
+              <span class="nt">&lt;radius&gt;</span>0.11<span class="nt">&lt;/radius&gt;</span>
+              <span class="nt">&lt;length&gt;</span>0.05<span class="nt">&lt;/length&gt;</span>
+            <span class="nt">&lt;/cylinder&gt;</span>
+          <span class="nt">&lt;/geometry&gt;</span>
+          <span class="nt">&lt;surface&gt;</span>
+            <span class="nt">&lt;friction&gt;</span>
+              <span class="nt">&lt;ode&gt;</span>
+                <span class="nt">&lt;mu&gt;</span>100000<span class="nt">&lt;/mu&gt;</span>
+                <span class="nt">&lt;mu2&gt;</span>100000<span class="nt">&lt;/mu2&gt;</span>
+                <span class="nt">&lt;slip1&gt;</span>0<span class="nt">&lt;/slip1&gt;</span>
+                <span class="nt">&lt;slip2&gt;</span>0<span class="nt">&lt;/slip2&gt;</span>
+              <span class="nt">&lt;/ode&gt;</span>
+            <span class="nt">&lt;/friction&gt;</span>
+            <span class="nt">&lt;bounce/&gt;</span>
+            <span class="nt">&lt;contact&gt;</span>
+              <span class="nt">&lt;ode/&gt;</span>
+            <span class="nt">&lt;/contact&gt;</span>
+          <span class="nt">&lt;/surface&gt;</span>
+          <span class="nt">&lt;max_contacts&gt;</span>10<span class="nt">&lt;/max_contacts&gt;</span>
+        <span class="nt">&lt;/collision&gt;</span>
+        <span class="nt">&lt;visual</span> <span class="na">name=</span><span class="s">&quot;visual&quot;</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;geometry&gt;</span>
+            <span class="nt">&lt;cylinder&gt;</span>
+              <span class="nt">&lt;radius&gt;</span>0.11<span class="nt">&lt;/radius&gt;</span>
+              <span class="nt">&lt;length&gt;</span>0.05<span class="nt">&lt;/length&gt;</span>
+            <span class="nt">&lt;/cylinder&gt;</span>
+          <span class="nt">&lt;/geometry&gt;</span>
+          <span class="nt">&lt;material&gt;</span>
+            <span class="nt">&lt;script&gt;</span>
+              <span class="nt">&lt;uri&gt;</span>file://media/materials/scripts/gazebo.material<span class="nt">&lt;/uri&gt;</span>
+              <span class="nt">&lt;name&gt;</span>Gazebo/FlatBlack<span class="nt">&lt;/name&gt;</span>
+            <span class="nt">&lt;/script&gt;</span>
+          <span class="nt">&lt;/material&gt;</span>
+        <span class="nt">&lt;/visual&gt;</span>
+        <span class="nt">&lt;velocity_decay&gt;</span>
+          <span class="nt">&lt;linear&gt;</span>0<span class="nt">&lt;/linear&gt;</span>
+          <span class="nt">&lt;angular&gt;</span>0<span class="nt">&lt;/angular&gt;</span>
+        <span class="nt">&lt;/velocity_decay&gt;</span>
+        <span class="nt">&lt;self_collide&gt;</span>0<span class="nt">&lt;/self_collide&gt;</span>
+        <span class="nt">&lt;kinematic&gt;</span>0<span class="nt">&lt;/kinematic&gt;</span>
+        <span class="nt">&lt;gravity&gt;</span>1<span class="nt">&lt;/gravity&gt;</span>
+      <span class="nt">&lt;/link&gt;</span>
+      <span class="nt">&lt;link</span> <span class="na">name=</span><span class="s">&quot;left_wheel&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;pose&gt;</span>0.1 0.17 0.11 0 1.5707 1.5707<span class="nt">&lt;/pose&gt;</span>
+        <span class="nt">&lt;inertial&gt;</span>
+          <span class="nt">&lt;mass&gt;</span>1.5<span class="nt">&lt;/mass&gt;</span>
+          <span class="nt">&lt;inertia&gt;</span>
+            <span class="nt">&lt;ixx&gt;</span>0.0051<span class="nt">&lt;/ixx&gt;</span>
+            <span class="nt">&lt;iyy&gt;</span>0.0051<span class="nt">&lt;/iyy&gt;</span>
+            <span class="nt">&lt;izz&gt;</span>0.009<span class="nt">&lt;/izz&gt;</span>
+            <span class="nt">&lt;ixy&gt;</span>0<span class="nt">&lt;/ixy&gt;</span>
+            <span class="nt">&lt;ixz&gt;</span>0<span class="nt">&lt;/ixz&gt;</span>
+            <span class="nt">&lt;iyz&gt;</span>0<span class="nt">&lt;/iyz&gt;</span>
+          <span class="nt">&lt;/inertia&gt;</span>
+        <span class="nt">&lt;/inertial&gt;</span>
+        <span class="nt">&lt;collision</span> <span class="na">name=</span><span class="s">&quot;collision&quot;</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;geometry&gt;</span>
+            <span class="nt">&lt;cylinder&gt;</span>
+              <span class="nt">&lt;radius&gt;</span>0.11<span class="nt">&lt;/radius&gt;</span>
+              <span class="nt">&lt;length&gt;</span>0.05<span class="nt">&lt;/length&gt;</span>
+            <span class="nt">&lt;/cylinder&gt;</span>
+          <span class="nt">&lt;/geometry&gt;</span>
+          <span class="nt">&lt;surface&gt;</span>
+            <span class="nt">&lt;friction&gt;</span>
+              <span class="nt">&lt;ode&gt;</span>
+                <span class="nt">&lt;mu&gt;</span>100000<span class="nt">&lt;/mu&gt;</span>
+                <span class="nt">&lt;mu2&gt;</span>100000<span class="nt">&lt;/mu2&gt;</span>
+                <span class="nt">&lt;slip1&gt;</span>0<span class="nt">&lt;/slip1&gt;</span>
+                <span class="nt">&lt;slip2&gt;</span>0<span class="nt">&lt;/slip2&gt;</span>
+              <span class="nt">&lt;/ode&gt;</span>
+            <span class="nt">&lt;/friction&gt;</span>
+            <span class="nt">&lt;bounce/&gt;</span>
+            <span class="nt">&lt;contact&gt;</span>
+              <span class="nt">&lt;ode/&gt;</span>
+            <span class="nt">&lt;/contact&gt;</span>
+          <span class="nt">&lt;/surface&gt;</span>
+          <span class="nt">&lt;max_contacts&gt;</span>10<span class="nt">&lt;/max_contacts&gt;</span>
+        <span class="nt">&lt;/collision&gt;</span>
+        <span class="nt">&lt;visual</span> <span class="na">name=</span><span class="s">&quot;visual&quot;</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;geometry&gt;</span>
+            <span class="nt">&lt;cylinder&gt;</span>
+              <span class="nt">&lt;radius&gt;</span>0.11<span class="nt">&lt;/radius&gt;</span>
+              <span class="nt">&lt;length&gt;</span>0.05<span class="nt">&lt;/length&gt;</span>
+            <span class="nt">&lt;/cylinder&gt;</span>
+          <span class="nt">&lt;/geometry&gt;</span>
+          <span class="nt">&lt;material&gt;</span>
+            <span class="nt">&lt;script&gt;</span>
+              <span class="nt">&lt;uri&gt;</span>file://media/materials/scripts/gazebo.material<span class="nt">&lt;/uri&gt;</span>
+              <span class="nt">&lt;name&gt;</span>Gazebo/FlatBlack<span class="nt">&lt;/name&gt;</span>
+            <span class="nt">&lt;/script&gt;</span>
+          <span class="nt">&lt;/material&gt;</span>
+        <span class="nt">&lt;/visual&gt;</span>
+        <span class="nt">&lt;velocity_decay&gt;</span>
+          <span class="nt">&lt;linear&gt;</span>0<span class="nt">&lt;/linear&gt;</span>
+          <span class="nt">&lt;angular&gt;</span>0<span class="nt">&lt;/angular&gt;</span>
+        <span class="nt">&lt;/velocity_decay&gt;</span>
+        <span class="nt">&lt;self_collide&gt;</span>0<span class="nt">&lt;/self_collide&gt;</span>
+        <span class="nt">&lt;kinematic&gt;</span>0<span class="nt">&lt;/kinematic&gt;</span>
+        <span class="nt">&lt;gravity&gt;</span>1<span class="nt">&lt;/gravity&gt;</span>
+      <span class="nt">&lt;/link&gt;</span>
+      <span class="nt">&lt;joint</span> <span class="na">name=</span><span class="s">&quot;left_wheel_hinge&quot;</span> <span class="na">type=</span><span class="s">&quot;revolute&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;pose&gt;</span>0 0 -0.03 0 -0 0<span class="nt">&lt;/pose&gt;</span>
+        <span class="nt">&lt;child&gt;</span>left_wheel<span class="nt">&lt;/child&gt;</span>
+        <span class="nt">&lt;parent&gt;</span>chassis<span class="nt">&lt;/parent&gt;</span>
+        <span class="nt">&lt;axis&gt;</span>
+          <span class="nt">&lt;xyz&gt;</span>0 1 0<span class="nt">&lt;/xyz&gt;</span>
+          <span class="nt">&lt;limit&gt;</span>
+            <span class="nt">&lt;lower&gt;</span>-1e+16<span class="nt">&lt;/lower&gt;</span>
+            <span class="nt">&lt;upper&gt;</span>1e+16<span class="nt">&lt;/upper&gt;</span>
+          <span class="nt">&lt;/limit&gt;</span>
+        <span class="nt">&lt;/axis&gt;</span>
+      <span class="nt">&lt;/joint&gt;</span>
+      <span class="nt">&lt;joint</span> <span class="na">name=</span><span class="s">&quot;right_wheel_hinge&quot;</span> <span class="na">type=</span><span class="s">&quot;revolute&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;pose&gt;</span>0 0 0.03 0 -0 0<span class="nt">&lt;/pose&gt;</span>
+        <span class="nt">&lt;child&gt;</span>right_wheel<span class="nt">&lt;/child&gt;</span>
+        <span class="nt">&lt;parent&gt;</span>chassis<span class="nt">&lt;/parent&gt;</span>
+        <span class="nt">&lt;axis&gt;</span>
+          <span class="nt">&lt;xyz&gt;</span>0 1 0<span class="nt">&lt;/xyz&gt;</span>
+          <span class="nt">&lt;limit&gt;</span>
+            <span class="nt">&lt;lower&gt;</span>-1e+16<span class="nt">&lt;/lower&gt;</span>
+            <span class="nt">&lt;upper&gt;</span>1e+16<span class="nt">&lt;/upper&gt;</span>
+          <span class="nt">&lt;/limit&gt;</span>
+        <span class="nt">&lt;/axis&gt;</span>
+      <span class="nt">&lt;/joint&gt;</span>
+      <span class="c">&lt;!-- Replaced Gazebo&#39;s differential drive plugin with the ROS-friendly variant --&gt;</span>
+      <span class="c">&lt;!--</span>
+<span class="c">      &lt;plugin filename=&quot;libDiffDrivePlugin.so&quot; name=&quot;diff_drive&quot;&gt;</span>
+<span class="c">      &lt;left_joint&gt;left_wheel_hinge&lt;/left_joint&gt;</span>
+<span class="c">      &lt;right_joint&gt;right_wheel_hinge&lt;/right_joint&gt;</span>
+<span class="c">      &lt;torque&gt;5&lt;/torque&gt;</span>
+<span class="c">      &lt;/plugin&gt;</span>
+<span class="c">      --&gt;</span>
+      <span class="nt">&lt;plugin</span> <span class="na">name=</span><span class="s">&quot;differential_drive_controller&quot;</span> <span class="na">filename=</span><span class="s">&quot;libgazebo_ros_diff_drive.so&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;alwaysOn&gt;</span>true<span class="nt">&lt;/alwaysOn&gt;</span>
+        <span class="nt">&lt;updateRate&gt;</span>100<span class="nt">&lt;/updateRate&gt;</span>
+        <span class="nt">&lt;leftJoint&gt;</span>left_wheel_hinge<span class="nt">&lt;/leftJoint&gt;</span>
+        <span class="nt">&lt;rightJoint&gt;</span>right_wheel_hinge<span class="nt">&lt;/rightJoint&gt;</span>
+        <span class="nt">&lt;wheelSeparation&gt;</span>0.39<span class="nt">&lt;/wheelSeparation&gt;</span>
+        <span class="nt">&lt;wheelDiameter&gt;</span>0.15<span class="nt">&lt;/wheelDiameter&gt;</span>
+        <span class="nt">&lt;torque&gt;</span>5<span class="nt">&lt;/torque&gt;</span>
+        <span class="nt">&lt;commandTopic&gt;</span>cmd_vel<span class="nt">&lt;/commandTopic&gt;</span>
+        <span class="nt">&lt;odometryTopic&gt;</span>odom<span class="nt">&lt;/odometryTopic&gt;</span>
+        <span class="nt">&lt;odometryFrame&gt;</span>odom<span class="nt">&lt;/odometryFrame&gt;</span>
+        <span class="nt">&lt;robotBaseFrame&gt;</span>chassis<span class="nt">&lt;/robotBaseFrame&gt;</span>
+      <span class="nt">&lt;/plugin&gt;</span>
+      <span class="nt">&lt;pose&gt;</span>0 0 0 0 -0 0<span class="nt">&lt;/pose&gt;</span>
+      <span class="nt">&lt;static&gt;</span>0<span class="nt">&lt;/static&gt;</span>
+    <span class="nt">&lt;/model&gt;</span>
+    <span class="nt">&lt;state</span> <span class="na">world_name=</span><span class="s">&quot;default&quot;</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;sim_time&gt;</span>85 304000000<span class="nt">&lt;/sim_time&gt;</span>
+      <span class="nt">&lt;real_time&gt;</span>85 849190220<span class="nt">&lt;/real_time&gt;</span>
+      <span class="nt">&lt;wall_time&gt;</span>1432260579 736436496<span class="nt">&lt;/wall_time&gt;</span>
+      <span class="nt">&lt;model</span> <span class="na">name=</span><span class="s">&quot;ground_plane&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;pose&gt;</span>0 0 0 0 -0 0<span class="nt">&lt;/pose&gt;</span>
+        <span class="nt">&lt;link</span> <span class="na">name=</span><span class="s">&quot;link&quot;</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;pose&gt;</span>0 0 0 0 -0 0<span class="nt">&lt;/pose&gt;</span>
+          <span class="nt">&lt;velocity&gt;</span>0 0 0 0 -0 0<span class="nt">&lt;/velocity&gt;</span>
+          <span class="nt">&lt;acceleration&gt;</span>0 0 0 0 -0 0<span class="nt">&lt;/acceleration&gt;</span>
+          <span class="nt">&lt;wrench&gt;</span>0 0 0 0 -0 0<span class="nt">&lt;/wrench&gt;</span>
+        <span class="nt">&lt;/link&gt;</span>
+      <span class="nt">&lt;/model&gt;</span>
+      <span class="nt">&lt;model</span> <span class="na">name=</span><span class="s">&quot;pioneer2dx&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;pose&gt;</span>-0.103826 0.027961 2e-06 -2e-06 -8e-06 -0.094162<span class="nt">&lt;/pose&gt;</span>
+        <span class="nt">&lt;link</span> <span class="na">name=</span><span class="s">&quot;chassis&quot;</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;pose&gt;</span>-0.103827 0.027961 0.160002 -2e-06 -8e-06 -0.094162<span class="nt">&lt;/pose&gt;</span>
+          <span class="nt">&lt;velocity&gt;</span>-0.000797 0.002229 0.003363 -0.024657 -0.007301 0.0023<span class="nt">&lt;/velocity&gt;</span>
+          <span class="nt">&lt;acceleration&gt;</span>0 0 0 0 -0 0<span class="nt">&lt;/acceleration&gt;</span>
+          <span class="nt">&lt;wrench&gt;</span>0 0 0 0 -0 0<span class="nt">&lt;/wrench&gt;</span>
+        <span class="nt">&lt;/link&gt;</span>
+        <span class="nt">&lt;link</span> <span class="na">name=</span><span class="s">&quot;left_wheel&quot;</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;pose&gt;</span>0.011714 0.187806 0.110002 1.38258 1.57033 2.85912<span class="nt">&lt;/pose&gt;</span>
+          <span class="nt">&lt;velocity&gt;</span>-0.000816 0.001565 0.000275 -0.014307 -0.006987 0.002012<span class="nt">&lt;/velocity&gt;</span>
+          <span class="nt">&lt;acceleration&gt;</span>0 0 0 0 -0 0<span class="nt">&lt;/acceleration&gt;</span>
+          <span class="nt">&lt;wrench&gt;</span>0 0 0 0 -0 0<span class="nt">&lt;/wrench&gt;</span>
+        <span class="nt">&lt;/link&gt;</span>
+        <span class="nt">&lt;link</span> <span class="na">name=</span><span class="s">&quot;right_wheel&quot;</span><span class="nt">&gt;</span>
+          <span class="nt">&lt;pose&gt;</span>-0.020254 -0.150688 0.110002 -1.56886 1.51434 -0.092322<span class="nt">&lt;/pose&gt;</span>
+          <span class="nt">&lt;velocity&gt;</span>-0.000347 0.001559 0.008433 -0.014387 -0.003243 0.000126<span class="nt">&lt;/velocity&gt;</span>
+          <span class="nt">&lt;acceleration&gt;</span>0 0 0 0 -0 0<span class="nt">&lt;/acceleration&gt;</span>
+          <span class="nt">&lt;wrench&gt;</span>0 0 0 0 -0 0<span class="nt">&lt;/wrench&gt;</span>
+        <span class="nt">&lt;/link&gt;</span>
+      <span class="nt">&lt;/model&gt;</span>
+    <span class="nt">&lt;/state&gt;</span>
+    <span class="nt">&lt;gui</span> <span class="na">fullscreen=</span><span class="s">&quot;0&quot;</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;camera</span> <span class="na">name=</span><span class="s">&quot;user_camera&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;pose&gt;</span>5 -5 2 0 0.275643 2.35619<span class="nt">&lt;/pose&gt;</span>
+        <span class="nt">&lt;view_controller&gt;</span>orbit<span class="nt">&lt;/view_controller&gt;</span>
+      <span class="nt">&lt;/camera&gt;</span>
+    <span class="nt">&lt;/gui&gt;</span>
+  <span class="nt">&lt;/world&gt;</span>
+<span class="nt">&lt;/sdf&gt;</span>
+</pre></div>
+</td></tr></table>
+
+<p>Open a terminal window and start the ROS middleware by entering:</p>
+<div class="highlight"><pre><span></span>$ roscore
+</pre></div>
+
+
+<p>Open another terminal window, <code>cd</code> to the folder containing <code>pioneer2dx_ros.world</code> and enter:</p>
+<div class="highlight"><pre><span></span>rosrun gazebo_ros gazebo -file pioneer2dx_ros.world
+</pre></div>
+
+
+<p>You should now have a Gazebo window opened with a Pioneer 2DX placed in the middle of an empty world.</p>
+<p><img alt="Gazebo GUI" src="/images/articles/2015-05-21-01/snapshot.png"></p>
+<p>Finally, open a third terminal window (it's the last one, I promise) and check if the differential drive topics have been published:</p>
+<div class="highlight"><pre><span></span>rostopic list
+</pre></div>
+
+
+<p>The following topics should be visible, among others:</p>
+<div class="highlight"><pre><span></span>/pioneer2dx/cmd_vel
+/pioneer2dx/odom
+</pre></div>
+
+
+<p>You should now be able to get the robot moving by publishing messages to the <code>/pioneer2dx/cmd_vel</code> topic, e.g.</p>
+<div class="highlight"><pre><span></span>rostopic pub -1 /pioneer2dx/cmd_vel geometry_msgs/Twist \
+&#39;{linear: {x: 1.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 1.0}}&#39;
+</pre></div>
+
+
+<p>Should get the robot running in a loop.</p>
+            </div><!-- /.entry-content -->
+
+
+        </div><!-- /.eleven.columns -->
+
+<div class="three columns">
+
+<!--<h4>Pages</h4>
+
+ <ul>
+      <li><a href="/posts.html">Posts</a></li>
+      <li><a href="/pages/projects.html">Projects</a></li>
+  </ul>-->
+
+<h4>Categories</h4>
+<ul>
+		<li><a href="/category/code.html">Code</a></li>
+</ul>
+
+
+<h4>Tags</h4>
+<ul>
+	    <li class="tag-2"><a href="/tag/ros.html">ROS</a></li>
+	    <li class="tag-4"><a href="/tag/java.html">Java</a></li>
+	    <li class="tag-4"><a href="/tag/project.html">Project</a></li>
+	    <li class="tag-2"><a href="/tag/python.html">Python</a></li>
+	    <li class="tag-4"><a href="/tag/ai.html">AI</a></li>
+	    <li class="tag-1"><a href="/tag/robotics.html">Robotics</a></li>
+	    <li class="tag-1"><a href="/tag/tutorial.html">Tutorial</a></li>
+</ul>
+
+
+
+</div> </div><!-- /.row -->
+
+
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+  <script src="/theme/js/libs/jquery-1.9.1.min.js"></script>
+  <script src="/theme/js/libs/gumby.min.js"></script>
+  <script src="/theme/js/plugins.js"></script>
+</body>
+</html>
