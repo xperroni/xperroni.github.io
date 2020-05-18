@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+        <title>FFT-based cosine similarity for fast template matching</title>
+        <meta charset="utf-8" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="/theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="/theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="/theme/pygment.css" />
+
+        <script src="/theme/js/libs/modernizr-2.6.2.min.js"></script>
+
+
+
+
+</head>
+
+<body id="index" class="home">
+
+
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1><a href="/">Home Page of Helio Perroni Filho <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+             
+              <ul class="columns">
+                <li><a href="/">Home</a></li>
+
+                <li><a href="/posts.html">Posts</a></li>
+                <li><a href="/pages/projects.html">Projects</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+
+   <div class="row">
+        <div class="eleven columns">
+
+
+            <header>
+              <h2 class="entry-title">
+                <a href="/fft-based-cosine-similarity-for-fast-template-matching.html" rel="bookmark"
+                   title="Permalink to FFT-based cosine similarity for fast template matching">FFT-based cosine similarity for fast template matching</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2015-12-21T22:51:00-05:00">
+                Mon 21 December 2015
+              </abbr>
+              <address class="vcard author">By 
+                <a class="url fn" href="/author/helio-perroni-filho.html"> Helio Perroni Filho</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <p>A common task in computer vision applications is <a href="https://en.wikipedia.org/wiki/Template_matching">template matching</a>, the search for a comparatively small image patch – or more likely, its closest approximation – in a larger image. In its simplest form, this implies solving the following optimization:</p>
+<div class="math">\begin{equation}
+(i^*, j^*) = \arg \max_{i,j} s(T, P_{i,j})
+\label{eq:tm}
+\end{equation}</div>
+<p>Where the similarity metric <span class="math">\(s(T, P_{i,j})\)</span> is defined between a template <span class="math">\(T^{m_t \times n_t}\)</span> and all patches <span class="math">\(P^{m_t \times n_t}_{i,j}\)</span> such that:</p>
+<div class="math">\begin{equation}
+P^{m_t \times n_t}_{i,j} = I[i:i+m_t,j:j+n_t]
+\label{eq:p}
+\end{equation}</div>
+<p>For an image <span class="math">\(I^{m \times n}\)</span> with <span class="math">\(m_t \ll m\)</span> and <span class="math">\(n_t \ll n\)</span> (i.e. the image is much larger than the template). A common choice of similarity metric is <a href="https://en.wikipedia.org/wiki/Cosine_similarity">cosine similarity</a>, which is defined as:</p>
+<div class="math">\begin{equation}
+cos(A, B) = \frac{A \cdot B}{\|A\| \|B\|} = \frac{\displaystyle\sum^{m,n}_{i,j} A[i,j]B[i,j]}{\sqrt{\displaystyle\sum^{m,n}_{i,j} A[i,j]^2 \displaystyle\sum^{m,n}_{i,j} B[i,j]^2}}
+\label{eq:cos}
+\end{equation}</div>
+<p>Cosine similarity is a reliable metric, but as defined above its evaluation is rather costly. Combining formulas \eqref{eq:tm}, \eqref{eq:p} and \eqref{eq:cos} gives:</p>
+<div class="math">\begin{equation}
+(i^*, j^*) = \arg \max_{i,j} \frac{\displaystyle\sum^{m_t,n_t}_{i_t,j_t} T[i_t,j_t] I[i + i_t, j + j_t]}{\sqrt{\displaystyle\sum^{m_t,n_t}_{i_t,j_t} T[i_t,j_t]^2 \displaystyle\sum^{m_t,n_t}_{i_t,j_t} I[i + i_t, j + j_t]^2}}
+\label{eq:tm_cos}
+\end{equation}</div>
+<p>Which is of time complexity <span class="math">\(\mathrm{O}(m \, n \, m_tn_t)\)</span> – i.e. the size of the template times the size of the image. Depending on image and template sizes, the intended use case (e.g. batch vs. real-time) or scale of the template matching task (e.g. a couple dozen vs. thousands of images), this may incur in prohibitive processing costs.</p>
+<p>Cosine similarity template matching can be sped up with application of the <a href="https://en.wikipedia.org/wiki/Convolution_theorem">convolution theorem</a>. First, let's redefine formula \eqref{eq:tm_cos} as:</p>
+<div class="math">\begin{equation}
+(i^*, j^*) = \arg \max_{i,j} \frac{D_{T, I}[i,j]}{\sqrt{m_T M_I[i,j]}}
+\label{eq:tm_cos_2}
+\end{equation}</div>
+<p>Where:</p>
+<div class="math">\begin{equation}
+D_{T, I}[i,j] = \displaystyle\sum^{m_t,n_t}_{i_t,j_t} T[i_t,j_t] I[i + i_t, j + j_t]
+\label{eq:D_TI}
+\end{equation}</div>
+<div class="math">\begin{equation}
+m_T = \displaystyle\sum^{m_t,n_t}_{i_t,j_t} T[i_t,j_t]^2
+\label{eq:m_T}
+\end{equation}</div>
+<div class="math">\begin{equation}
+M_I[i,j] = \displaystyle\sum^{m_t,n_t}_{i_t,j_t} I[i + i_t, j + j_t]^2
+\label{eq:M_I}
+\end{equation}</div>
+<p>Looking into the three terms above, it's clear that \eqref{eq:m_T} is constant for any given <span class="math">\(T\)</span> and can therefore be left out of the computation. On the other hand, \eqref{eq:D_TI} is just the <a href="https://en.wikipedia.org/wiki/Cross-correlation">cross-correlation</a> between <span class="math">\(T\)</span> and <span class="math">\(I\)</span>, which by the convolution theorem can also be computed as:</p>
+<div class="math">\begin{equation}
+D_{T, I} = \mathcal{F}^{-1}(\mathcal{F}(T)^{*} \circ \mathcal{F}(I))
+\end{equation}</div>
+<p>Where <span class="math">\(\mathcal{F}\)</span> is the <a href="https://en.wikipedia.org/wiki/Fourier_transform">fourier transform</a> operator, <span class="math">\(\mathcal{F}^{-1}\)</span> the inverse transform, the asterisk denotes the <a href="https://en.wikipedia.org/wiki/Complex_conjugate">complex conjugate</a>, and <span class="math">\(\circ\)</span> is the <a href="https://en.wikipedia.org/wiki/Hadamard_product_%28matrices%29">Hadamard product</a> (element-wise multiplication) of the two transforms. Likewise, \eqref{eq:M_I} can be computed as the cross-correlation between <span class="math">\(I^2\)</span> and a window filter <span class="math">\(W^{m_t \times n_t} = [w_{ij} = 1]\)</span>:</p>
+<div class="math">\begin{equation}
+M_I = \mathcal{F}^{-1}(\mathcal{F}(W)^{*} \circ \mathcal{F}(I^2))
+\end{equation}</div>
+<p>The advantage of this approach is that algorithms such as the <a href="https://en.wikipedia.org/wiki/Fast_Fourier_transform">Fast Fourier Transform</a> (FFT) are of time complexity <span class="math">\(\mathrm{O}(m \, n \, log \, m \, n)\)</span>, which depending on the relative sizes of <span class="math">\(T\)</span> and <span class="math">\(I\)</span> may be faster than the <span class="math">\(\mathrm{O}(m \, n \, m_t n_t)\)</span> of the direct computation. Also the Fourier transforms of <span class="math">\(W\)</span> and (if the same template will be applied to several images) <span class="math">\(T\)</span> can be cached, further saving up computation time.</p>
+<p><b>Implementation</b></p>
+<p>The C++ code below provides a basic implementation of the method outlined above. It uses the popular <a href="http://opencv.org/">OpenCV</a> library, with some further optimizations particular to its implementation of the Fourier transform, explained in the comments.</p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;opencv2/opencv.hpp&gt;</span><span class="cp"></span>
+
+<span class="k">static</span> <span class="k">const</span> <span class="n">cv</span><span class="o">::</span><span class="n">Scalar</span> <span class="n">ONE</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+
+<span class="k">static</span> <span class="k">const</span> <span class="n">cv</span><span class="o">::</span><span class="n">Scalar</span> <span class="n">ZERO</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+
+<span class="k">static</span> <span class="k">const</span> <span class="n">cv</span><span class="o">::</span><span class="n">Scalar</span> <span class="n">WHITE</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">);</span>
+
+<span class="c1">// Fourier transform performance is not a monotonic function of a vector</span>
+<span class="c1">// size - matrices whose dimensions are powers of two are the fastest to</span>
+<span class="c1">// process, and multiples of 2, 3 and 5 (for example, 300 = 5*5*3*2*2) are</span>
+<span class="c1">// also processed quite efficiently. Therefore it makes sense to pad input</span>
+<span class="c1">// data with zeros to get a bit larger matrix that can be transformed much</span>
+<span class="c1">// faster than the original one.</span>
+<span class="n">cv</span><span class="o">::</span><span class="n">Size</span> <span class="n">fit</span><span class="p">(</span><span class="k">const</span> <span class="n">cv</span><span class="o">::</span><span class="n">Size</span> <span class="o">&amp;</span><span class="n">size</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="k">return</span> <span class="n">cv</span><span class="o">::</span><span class="n">Size</span><span class="p">(</span><span class="n">cv</span><span class="o">::</span><span class="n">getOptimalDFTSize</span><span class="p">(</span><span class="n">size</span><span class="p">.</span><span class="n">width</span><span class="p">),</span>
+                  <span class="n">cv</span><span class="o">::</span><span class="n">getOptimalDFTSize</span><span class="p">(</span><span class="n">size</span><span class="p">.</span><span class="n">height</span><span class="p">));</span>
+<span class="p">}</span>
+
+<span class="n">cv</span><span class="o">::</span><span class="n">Mat</span> <span class="n">F_fwd</span><span class="p">(</span><span class="k">const</span> <span class="n">cv</span><span class="o">::</span><span class="n">Mat</span> <span class="o">&amp;</span><span class="n">I</span><span class="p">,</span> <span class="k">const</span> <span class="n">cv</span><span class="o">::</span><span class="n">Size</span> <span class="o">&amp;</span><span class="n">size</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="c1">// Pad input matrix to given size.</span>
+  <span class="n">cv</span><span class="o">::</span><span class="n">Mat</span> <span class="n">P</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">m</span> <span class="o">=</span> <span class="n">size</span><span class="p">.</span><span class="n">height</span> <span class="o">-</span> <span class="n">I</span><span class="p">.</span><span class="n">rows</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="n">size</span><span class="p">.</span><span class="n">width</span> <span class="o">-</span> <span class="n">I</span><span class="p">.</span><span class="n">cols</span><span class="p">;</span>
+  <span class="n">cv</span><span class="o">::</span><span class="n">copyMakeBorder</span><span class="p">(</span><span class="n">I</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">cv</span><span class="o">::</span><span class="n">BORDER_CONSTANT</span><span class="p">,</span> <span class="n">ZERO</span><span class="p">);</span>
+
+  <span class="c1">// Compute Fourier transform for input data. The last argument</span>
+  <span class="c1">// informs the dft() function of how many non-zero rows are there,</span>
+  <span class="c1">// so it can handle the rest of the rows more efficiently and save</span>
+  <span class="c1">// some time.</span>
+  <span class="n">cv</span><span class="o">::</span><span class="n">Mat</span> <span class="n">F</span><span class="p">;</span>
+  <span class="n">cv</span><span class="o">::</span><span class="n">dft</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">I</span><span class="p">.</span><span class="n">rows</span><span class="p">);</span>
+
+  <span class="k">return</span> <span class="n">F</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="n">cv</span><span class="o">::</span><span class="n">Mat</span> <span class="n">F_inv</span><span class="p">(</span><span class="k">const</span> <span class="n">cv</span><span class="o">::</span><span class="n">Mat</span> <span class="o">&amp;</span><span class="n">F</span><span class="p">,</span> <span class="k">const</span> <span class="n">cv</span><span class="o">::</span><span class="n">Size</span> <span class="o">&amp;</span><span class="n">size</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="c1">// Compute inverse Fourier transform for input data. The last</span>
+  <span class="c1">// argument informs the dft() function of how many non-zero</span>
+  <span class="c1">// rows are expected in the output, so it can handle the rest</span>
+  <span class="c1">// of the rows more efficiently and save some time.</span>
+  <span class="n">cv</span><span class="o">::</span><span class="n">Mat</span> <span class="n">I</span><span class="p">;</span>
+  <span class="n">cv</span><span class="o">::</span><span class="n">dft</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">cv</span><span class="o">::</span><span class="n">DFT_INVERSE</span> <span class="o">+</span> <span class="n">cv</span><span class="o">::</span><span class="n">DFT_SCALE</span><span class="p">,</span> <span class="n">size</span><span class="p">.</span><span class="n">height</span><span class="p">);</span>
+
+  <span class="k">return</span> <span class="nf">I</span><span class="p">(</span><span class="n">cv</span><span class="o">::</span><span class="n">Rect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">size</span><span class="p">.</span><span class="n">width</span><span class="p">,</span> <span class="n">size</span><span class="p">.</span><span class="n">height</span><span class="p">));</span>
+<span class="p">}</span>
+
+<span class="n">cv</span><span class="o">::</span><span class="n">Mat</span> <span class="n">C</span><span class="p">(</span><span class="k">const</span> <span class="n">cv</span><span class="o">::</span><span class="n">Mat</span> <span class="o">&amp;</span><span class="n">T</span><span class="p">,</span> <span class="k">const</span> <span class="n">cv</span><span class="o">::</span><span class="n">Mat</span> <span class="o">&amp;</span><span class="n">I</span><span class="p">,</span> <span class="k">const</span> <span class="n">cv</span><span class="o">::</span><span class="n">Size</span> <span class="o">&amp;</span><span class="n">size</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="c1">// Compute the Fourier transforms of template and image.</span>
+  <span class="n">cv</span><span class="o">::</span><span class="n">Mat</span> <span class="n">F_T</span> <span class="o">=</span> <span class="n">F_fwd</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">size</span><span class="p">);</span>
+  <span class="n">cv</span><span class="o">::</span><span class="n">Mat</span> <span class="n">F_I</span> <span class="o">=</span> <span class="n">F_fwd</span><span class="p">(</span><span class="n">I</span><span class="p">,</span> <span class="n">size</span><span class="p">);</span>
+
+  <span class="c1">// Compute the cross correlation in the frequency domain.</span>
+  <span class="n">cv</span><span class="o">::</span><span class="n">Mat</span> <span class="n">F_TI</span><span class="p">;</span>
+  <span class="n">cv</span><span class="o">::</span><span class="n">mulSpectrums</span><span class="p">(</span><span class="n">F_I</span><span class="p">,</span> <span class="n">F_T</span><span class="p">,</span> <span class="n">F_TI</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">true</span><span class="p">);</span>
+
+  <span class="c1">// Compute the inverse Fourier transform of the cross-correlation,</span>
+  <span class="c1">// dismissing those rows and columns of the cross-correlation</span>
+  <span class="c1">// matrix that would require the template to &quot;roll over&quot; the image.</span>
+  <span class="n">cv</span><span class="o">::</span><span class="n">Size</span> <span class="n">clipped</span><span class="p">;</span>
+  <span class="n">clipped</span><span class="p">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">I</span><span class="p">.</span><span class="n">cols</span> <span class="o">-</span> <span class="n">T</span><span class="p">.</span><span class="n">cols</span><span class="p">;</span>
+  <span class="n">clipped</span><span class="p">.</span><span class="n">height</span> <span class="o">=</span> <span class="n">I</span><span class="p">.</span><span class="n">rows</span> <span class="o">-</span> <span class="n">T</span><span class="p">.</span><span class="n">rows</span><span class="p">;</span>
+  <span class="k">return</span> <span class="nf">F_inv</span><span class="p">(</span><span class="n">F_TI</span><span class="p">,</span> <span class="n">clipped</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n">cv</span><span class="o">::</span><span class="n">Mat</span> <span class="n">W</span><span class="p">(</span><span class="k">const</span> <span class="n">cv</span><span class="o">::</span><span class="n">Mat</span> <span class="o">&amp;</span><span class="n">T</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="k">return</span> <span class="n">cv</span><span class="o">::</span><span class="n">Mat</span><span class="p">(</span><span class="n">T</span><span class="p">.</span><span class="n">size</span><span class="p">(),</span> <span class="n">CV_64F</span><span class="p">,</span> <span class="n">ONE</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n">cv</span><span class="o">::</span><span class="n">Point3f</span> <span class="n">matchTemplate</span><span class="p">(</span><span class="k">const</span> <span class="n">cv</span><span class="o">::</span><span class="n">Mat</span> <span class="o">&amp;</span><span class="n">T</span><span class="p">,</span> <span class="k">const</span> <span class="n">cv</span><span class="o">::</span><span class="n">Mat</span> <span class="o">&amp;</span><span class="n">I</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="c1">// Compute the optimal size for DFT computing.</span>
+  <span class="n">cv</span><span class="o">::</span><span class="n">Size</span> <span class="n">size</span> <span class="o">=</span> <span class="n">fit</span><span class="p">(</span><span class="n">I</span><span class="p">.</span><span class="n">size</span><span class="p">());</span>
+
+  <span class="c1">//Compute the cross-correlation and normalizing matrix.</span>
+  <span class="n">cv</span><span class="o">::</span><span class="n">Mat</span> <span class="n">C_TI</span> <span class="o">=</span> <span class="n">C</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">size</span><span class="p">);</span>
+  <span class="n">cv</span><span class="o">::</span><span class="n">Mat</span> <span class="n">M_I</span> <span class="o">=</span> <span class="n">C</span><span class="p">(</span><span class="n">W</span><span class="p">(</span><span class="n">T</span><span class="p">),</span> <span class="n">I</span><span class="p">.</span><span class="n">mul</span><span class="p">(</span><span class="n">I</span><span class="p">),</span> <span class="n">size</span><span class="p">);</span>
+
+  <span class="kt">int</span> <span class="n">i_s</span><span class="p">,</span> <span class="n">j_s</span><span class="p">;</span>
+  <span class="kt">float</span> <span class="n">r</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">rows</span> <span class="o">=</span> <span class="n">C_TI</span><span class="p">.</span><span class="n">rows</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">C_TI</span><span class="p">.</span><span class="n">cols</span><span class="p">;</span>
+  <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">rows</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+  <span class="p">{</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">cols</span><span class="p">;</span> <span class="n">j</span><span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+      <span class="kt">float</span> <span class="n">v</span> <span class="o">=</span> <span class="n">C_TI</span><span class="p">.</span><span class="n">at</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">M_I</span><span class="p">.</span><span class="n">at</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">));</span>
+      <span class="k">if</span> <span class="p">(</span><span class="n">r</span> <span class="o">&lt;</span> <span class="n">v</span><span class="p">)</span>
+      <span class="p">{</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">v</span><span class="p">;</span>
+        <span class="n">i_s</span> <span class="o">=</span> <span class="n">i</span><span class="p">;</span>
+        <span class="n">j_s</span> <span class="o">=</span> <span class="n">j</span><span class="p">;</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+
+  <span class="k">return</span> <span class="n">cv</span><span class="o">::</span><span class="n">Point3f</span><span class="p">(</span><span class="n">j_s</span><span class="p">,</span> <span class="n">i_s</span><span class="p">,</span> <span class="n">r</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n">cv</span><span class="o">::</span><span class="n">Mat</span> <span class="n">L</span><span class="p">(</span><span class="k">const</span> <span class="n">cv</span><span class="o">::</span><span class="n">Mat</span> <span class="o">&amp;</span><span class="n">I</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="n">cv</span><span class="o">::</span><span class="n">Mat</span> <span class="n">L_I</span><span class="p">,</span> <span class="n">L_F</span><span class="p">;</span>
+  <span class="n">cv</span><span class="o">::</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">I</span><span class="p">,</span> <span class="n">L_I</span><span class="p">,</span> <span class="n">CV_BGR2GRAY</span><span class="p">);</span>
+  <span class="n">L_I</span><span class="p">.</span><span class="n">convertTo</span><span class="p">(</span><span class="n">L_F</span><span class="p">,</span> <span class="n">CV_64F</span><span class="p">);</span>
+  <span class="k">return</span> <span class="n">L_F</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span>
+<span class="p">{</span>
+  <span class="n">cv</span><span class="o">::</span><span class="n">Mat</span> <span class="n">T</span> <span class="o">=</span> <span class="n">cv</span><span class="o">::</span><span class="n">imread</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+  <span class="n">cv</span><span class="o">::</span><span class="n">Mat</span> <span class="n">I</span> <span class="o">=</span> <span class="n">cv</span><span class="o">::</span><span class="n">imread</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">]);</span>
+
+  <span class="n">cv</span><span class="o">::</span><span class="n">Point3f</span> <span class="n">match</span> <span class="o">=</span> <span class="n">matchTemplate</span><span class="p">(</span><span class="n">L</span><span class="p">(</span><span class="n">T</span><span class="p">),</span> <span class="n">L</span><span class="p">(</span><span class="n">I</span><span class="p">));</span>
+  <span class="n">cv</span><span class="o">::</span><span class="n">rectangle</span><span class="p">(</span><span class="n">I</span><span class="p">,</span> <span class="n">cv</span><span class="o">::</span><span class="n">Rect</span><span class="p">(</span><span class="n">match</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">match</span><span class="p">.</span><span class="n">y</span><span class="p">,</span> <span class="n">T</span><span class="p">.</span><span class="n">cols</span><span class="p">,</span> <span class="n">T</span><span class="p">.</span><span class="n">rows</span><span class="p">),</span> <span class="n">WHITE</span><span class="p">);</span>
+
+  <span class="n">cv</span><span class="o">::</span><span class="n">imshow</span><span class="p">(</span><span class="s">&quot;Template&quot;</span><span class="p">,</span> <span class="n">T</span><span class="p">);</span>
+  <span class="n">cv</span><span class="o">::</span><span class="n">imshow</span><span class="p">(</span><span class="s">&quot;Image&quot;</span><span class="p">,</span> <span class="n">I</span><span class="p">);</span>
+  <span class="n">cv</span><span class="o">::</span><span class="n">waitKey</span><span class="p">();</span>
+
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width < 768) ? "left" : align;
+        indent = (screen.width < 768) ? "0em" : indent;
+        linebreak = (screen.width < 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/latest.js?config=TeX-AMS-MML_HTMLorMML';
+
+    var configscript = document.createElement('script');
+    configscript.type = 'text/x-mathjax-config';
+    configscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        availableFonts: ['STIX', 'TeX']," +
+        "        preferredFont: 'STIX'," +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(configscript);
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+</script>
+            </div><!-- /.entry-content -->
+
+
+        </div><!-- /.eleven.columns -->
+
+<div class="three columns">
+
+  <h4>Pages</h4>
+
+  <ul>
+    <li><a href="/posts.html">Posts</a></li>
+
+    <li ><a href="/pages/projects.html">Projects</a></li>
+  
+
+
+<h4>Tags</h4>
+	<ul class="blank">
+	    <li class="tag-4"><a href="/tag/ai.html">AI</a></li>
+	    <li class="tag-2"><a href="/tag/python.html">Python</a></li>
+	    <li class="tag-4"><a href="/tag/java.html">Java</a></li>
+	    <li class="tag-1"><a href="/tag/robotics.html">Robotics</a></li>
+	    <li class="tag-2"><a href="/tag/ros.html">ROS</a></li>
+	    <li class="tag-4"><a href="/tag/computer-vision.html">Computer Vision</a></li>
+	    <li class="tag-4"><a href="/tag/project.html">Project</a></li>
+	    <li class="tag-1"><a href="/tag/tutorial.html">Tutorial</a></li>
+</ul>
+
+
+
+</div> </div><!-- /.row -->
+
+
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+    
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+  <script src="/theme/js/libs/jquery-1.9.1.min.js"></script>
+  <script src="/theme/js/libs/gumby.min.js"></script>
+  <script src="/theme/js/plugins.js"></script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Home Page of Helio Perroni Filho</title><link href="/" rel="alternate"></link><link href="/feeds/all.atom.xml" rel="self"></link><id>/</id><updated>2017-11-05T17:00:00-05:00</updated><entry><title>Projecting Points with ROS Pinhole Camera Model</title><link href="/projecting-points-with-ros-pinhole-camera-model.html" rel="alternate"></link><published>2017-11-05T17:00:00-05:00</published><updated>2017-11-05T17:00:00-05:00</updated><author><name>Helio Perroni Filho</name></author><id>tag:None,2017-11-05:/projecting-points-with-ros-pinhole-camera-model.html</id><summary type="html">&lt;p&gt;How to project world points into a camera plane in ROS.&lt;/p&gt;</summary><content type="html">&lt;p&gt;A common task in robotics-related Computer Vision projects is &lt;a href="https://jordicenzano.name/front-test/2d-3d-paradigm-overview-2011/camera-model/"&gt;projecting&lt;/a&gt; a 3D point into the 2D image plane of a camera, or vice-versa. In ROS this can be achieved very easily with the help of classes &lt;a href="docs.ros.org/electric/api/tf/html/python/tf_python.html"&gt;tf.TransformListener&lt;/a&gt; and &lt;a href="http://docs.ros.org/diamondback/api/image_geometry/html/c++/classimage__geometry_1_1PinholeCameraModel.html"&gt;image_geometry.PinholeCameraModel&lt;/a&gt;.&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Home Page of Helio Perroni Filho</title><link href="http://xperroni.me/" rel="alternate"></link><link href="http://xperroni.me/feeds/all.atom.xml" rel="self"></link><id>http://xperroni.me/</id><updated>2017-11-05T17:00:00-05:00</updated><entry><title>Projecting Points with ROS Pinhole Camera Model</title><link href="http://xperroni.me/projecting-points-with-ros-pinhole-camera-model.html" rel="alternate"></link><published>2017-11-05T17:00:00-05:00</published><updated>2017-11-05T17:00:00-05:00</updated><author><name>Helio Perroni Filho</name></author><id>tag:xperroni.me,2017-11-05:/projecting-points-with-ros-pinhole-camera-model.html</id><summary type="html">&lt;p&gt;How to project world points into a camera plane in ROS.&lt;/p&gt;</summary><content type="html">&lt;p&gt;A common task in robotics-related Computer Vision projects is &lt;a href="https://jordicenzano.name/front-test/2d-3d-paradigm-overview-2011/camera-model/"&gt;projecting&lt;/a&gt; a 3D point into the 2D image plane of a camera, or vice-versa. In ROS this can be achieved very easily with the help of classes &lt;a href="docs.ros.org/electric/api/tf/html/python/tf_python.html"&gt;tf.TransformListener&lt;/a&gt; and &lt;a href="http://docs.ros.org/diamondback/api/image_geometry/html/c++/classimage__geometry_1_1PinholeCameraModel.html"&gt;image_geometry.PinholeCameraModel&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;Given an arbitrary 3D point in world coordinates, the first step is to convert its coordinates from the global reference frame to a camera-centric frame. Given a tuple &lt;code&gt;p_3d&lt;/code&gt; containing global coordinates of a point, and assuming there is a &lt;a href="http://wiki.ros.org/tf"&gt;tf&lt;/a&gt; broadcaster publishing transforms between the &lt;code&gt;/world&lt;/code&gt; (global) and &lt;code&gt;/base_link&lt;/code&gt; (camera-centric) frames, the code below transforms &lt;code&gt;p_3d&lt;/code&gt; to camera-centric coordinates:&lt;/p&gt;
 &lt;table class="highlighttable"&gt;&lt;tr&gt;&lt;td class="linenos"&gt;&lt;div class="linenodiv"&gt;&lt;pre&gt; 1
  2
@@ -49,7 +49,247 @@
 &lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
 
 &lt;p&gt;The &lt;code&gt;camera_info&lt;/code&gt; argument is an instance of the &lt;a href="http://docs.ros.org/api/sensor_msgs/html/msg/CameraInfo.html"&gt;sensor_msgs.msg.CameraInfo&lt;/a&gt; message class, it can be instantiated locally or received through a topic.&lt;/p&gt;
-&lt;p&gt;Notice that in real-world applications, rather than locally instantiating &lt;code&gt;tf.TransformListener&lt;/code&gt; and &lt;code&gt;image_geometry.PinholeCameraModel&lt;/code&gt; objects as in the code above, they'd more likely be instantiated once and kept as attributes of a node object.&lt;/p&gt;</content><category term="Robotics"></category><category term="Tutorial"></category><category term="Python"></category><category term="ROS"></category></entry><entry><title>Controlling a differential drive robot in Gazebo from ROS</title><link href="/controlling-a-differential-drive-robot-in-gazebo-from-ros.html" rel="alternate"></link><published>2015-05-21T21:12:00-04:00</published><updated>2015-05-21T21:12:00-04:00</updated><author><name>Helio Perroni Filho</name></author><id>tag:None,2015-05-21:/controlling-a-differential-drive-robot-in-gazebo-from-ros.html</id><summary type="html">&lt;p&gt;How to control a pure SDF Gazebo robot using ROS.&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;a href="http://gazebosim.org/"&gt;Gazebo&lt;/a&gt; is a simulation suite targeted at robotics projects, used by DARPA to implement the virtual part of its &lt;a href="http://spectrum.ieee.org/automaton/robotics/robotics-software/osrf-prepares-for-darpa-virtual-robotics-challenge"&gt;Robotics Challenge&lt;/a&gt;. It's a great companion to the &lt;a href="http://www.ros.org/"&gt;Robot Operating System&lt;/a&gt;, supporting &lt;a href="http://gazebosim.org/tutorials?cat=connect_ros"&gt;several ways&lt;/a&gt; to interface with it.&lt;/p&gt;
+&lt;p&gt;Notice that in real-world applications, rather than locally instantiating &lt;code&gt;tf.TransformListener&lt;/code&gt; and &lt;code&gt;image_geometry.PinholeCameraModel&lt;/code&gt; objects as in the code above, they'd more likely be instantiated once and kept as attributes of a node object.&lt;/p&gt;</content><category term="Code"></category><category term="Robotics"></category><category term="Tutorial"></category><category term="Python"></category><category term="ROS"></category></entry><entry><title>FFT-based cosine similarity for fast template matching</title><link href="http://xperroni.me/fft-based-cosine-similarity-for-fast-template-matching.html" rel="alternate"></link><published>2015-12-21T22:51:00-05:00</published><updated>2015-12-21T22:51:00-05:00</updated><author><name>Helio Perroni Filho</name></author><id>tag:xperroni.me,2015-12-21:/fft-based-cosine-similarity-for-fast-template-matching.html</id><summary type="html">&lt;p&gt;How to perform fast image template matching using Finite Fourier Transforms&lt;/p&gt;</summary><content type="html">&lt;p&gt;A common task in computer vision applications is &lt;a href="https://en.wikipedia.org/wiki/Template_matching"&gt;template matching&lt;/a&gt;, the search for a comparatively small image patch – or more likely, its closest approximation – in a larger image. In its simplest form, this implies solving the following optimization:&lt;/p&gt;
+&lt;div class="math"&gt;\begin{equation}
+(i^*, j^*) = \arg \max_{i,j} s(T, P_{i,j})
+\label{eq:tm}
+\end{equation}&lt;/div&gt;
+&lt;p&gt;Where the similarity metric &lt;span class="math"&gt;\(s(T, P_{i,j})\)&lt;/span&gt; is defined between a template &lt;span class="math"&gt;\(T^{m_t \times n_t}\)&lt;/span&gt; and all patches &lt;span class="math"&gt;\(P^{m_t \times n_t}_{i,j}\)&lt;/span&gt; such that:&lt;/p&gt;
+&lt;div class="math"&gt;\begin{equation}
+P^{m_t \times n_t}_{i,j} = I[i:i+m_t,j:j+n_t]
+\label{eq:p}
+\end{equation}&lt;/div&gt;
+&lt;p&gt;For an image &lt;span class="math"&gt;\(I^{m \times n}\)&lt;/span&gt; with &lt;span class="math"&gt;\(m_t \ll m\)&lt;/span&gt; and &lt;span class="math"&gt;\(n_t \ll n\)&lt;/span&gt; (i.e. the image is much larger than the template). A common choice of similarity metric is &lt;a href="https://en.wikipedia.org/wiki/Cosine_similarity"&gt;cosine similarity&lt;/a&gt;, which is defined as:&lt;/p&gt;
+&lt;div class="math"&gt;\begin{equation}
+cos(A, B) = \frac{A \cdot B}{\|A\| \|B\|} = \frac{\displaystyle\sum^{m,n}_{i,j} A[i,j]B[i,j]}{\sqrt{\displaystyle\sum^{m,n}_{i,j} A[i,j]^2 \displaystyle\sum^{m,n}_{i,j} B[i,j]^2}}
+\label{eq:cos}
+\end{equation}&lt;/div&gt;
+&lt;p&gt;Cosine similarity is a reliable metric, but as defined above its evaluation is rather costly. Combining formulas \eqref{eq:tm}, \eqref{eq:p} and \eqref{eq:cos} gives:&lt;/p&gt;
+&lt;div class="math"&gt;\begin{equation}
+(i^*, j^*) = \arg \max_{i,j} \frac{\displaystyle\sum^{m_t,n_t}_{i_t,j_t} T[i_t,j_t] I[i + i_t, j + j_t]}{\sqrt{\displaystyle\sum^{m_t,n_t}_{i_t,j_t} T[i_t,j_t]^2 \displaystyle\sum^{m_t,n_t}_{i_t,j_t} I[i + i_t, j + j_t]^2}}
+\label{eq:tm_cos}
+\end{equation}&lt;/div&gt;
+&lt;p&gt;Which is of time complexity &lt;span class="math"&gt;\(\mathrm{O}(m \, n \, m_tn_t)\)&lt;/span&gt; – i.e. the size of the template times the size of the image. Depending on image and template sizes, the intended use case (e.g. batch vs. real-time) or scale of the template matching task (e.g. a couple dozen vs. thousands of images), this may incur in prohibitive processing costs.&lt;/p&gt;
+&lt;p&gt;Cosine similarity template matching can be sped up with application of the &lt;a href="https://en.wikipedia.org/wiki/Convolution_theorem"&gt;convolution theorem&lt;/a&gt;. First, let's redefine formula \eqref{eq:tm_cos} as:&lt;/p&gt;
+&lt;div class="math"&gt;\begin{equation}
+(i^*, j^*) = \arg \max_{i,j} \frac{D_{T, I}[i,j]}{\sqrt{m_T M_I[i,j]}}
+\label{eq:tm_cos_2}
+\end{equation}&lt;/div&gt;
+&lt;p&gt;Where:&lt;/p&gt;
+&lt;div class="math"&gt;\begin{equation}
+D_{T, I}[i,j] = \displaystyle\sum^{m_t,n_t}_{i_t,j_t} T[i_t,j_t] I[i + i_t, j + j_t]
+\label{eq:D_TI}
+\end{equation}&lt;/div&gt;
+&lt;div class="math"&gt;\begin{equation}
+m_T = \displaystyle\sum^{m_t,n_t}_{i_t,j_t} T[i_t,j_t]^2
+\label{eq:m_T}
+\end{equation}&lt;/div&gt;
+&lt;div class="math"&gt;\begin{equation}
+M_I[i,j] = \displaystyle\sum^{m_t,n_t}_{i_t,j_t} I[i + i_t, j + j_t]^2
+\label{eq:M_I}
+\end{equation}&lt;/div&gt;
+&lt;p&gt;Looking into the three terms above, it's clear that \eqref{eq:m_T} is constant for any given &lt;span class="math"&gt;\(T\)&lt;/span&gt; and can therefore be left out of the computation. On the other hand, \eqref{eq:D_TI} is just the &lt;a href="https://en.wikipedia.org/wiki/Cross-correlation"&gt;cross-correlation&lt;/a&gt; between &lt;span class="math"&gt;\(T\)&lt;/span&gt; and &lt;span class="math"&gt;\(I\)&lt;/span&gt;, which by the convolution theorem can also be computed as:&lt;/p&gt;
+&lt;div class="math"&gt;\begin{equation}
+D_{T, I} = \mathcal{F}^{-1}(\mathcal{F}(T)^{*} \circ \mathcal{F}(I))
+\end{equation}&lt;/div&gt;
+&lt;p&gt;Where &lt;span class="math"&gt;\(\mathcal{F}\)&lt;/span&gt; is the &lt;a href="https://en.wikipedia.org/wiki/Fourier_transform"&gt;fourier transform&lt;/a&gt; operator, &lt;span class="math"&gt;\(\mathcal{F}^{-1}\)&lt;/span&gt; the inverse transform, the asterisk denotes the &lt;a href="https://en.wikipedia.org/wiki/Complex_conjugate"&gt;complex conjugate&lt;/a&gt;, and &lt;span class="math"&gt;\(\circ\)&lt;/span&gt; is the &lt;a href="https://en.wikipedia.org/wiki/Hadamard_product_%28matrices%29"&gt;Hadamard product&lt;/a&gt; (element-wise multiplication) of the two transforms. Likewise, \eqref{eq:M_I} can be computed as the cross-correlation between &lt;span class="math"&gt;\(I^2\)&lt;/span&gt; and a window filter &lt;span class="math"&gt;\(W^{m_t \times n_t} = [w_{ij} = 1]\)&lt;/span&gt;:&lt;/p&gt;
+&lt;div class="math"&gt;\begin{equation}
+M_I = \mathcal{F}^{-1}(\mathcal{F}(W)^{*} \circ \mathcal{F}(I^2))
+\end{equation}&lt;/div&gt;
+&lt;p&gt;The advantage of this approach is that algorithms such as the &lt;a href="https://en.wikipedia.org/wiki/Fast_Fourier_transform"&gt;Fast Fourier Transform&lt;/a&gt; (FFT) are of time complexity &lt;span class="math"&gt;\(\mathrm{O}(m \, n \, log \, m \, n)\)&lt;/span&gt;, which depending on the relative sizes of &lt;span class="math"&gt;\(T\)&lt;/span&gt; and &lt;span class="math"&gt;\(I\)&lt;/span&gt; may be faster than the &lt;span class="math"&gt;\(\mathrm{O}(m \, n \, m_t n_t)\)&lt;/span&gt; of the direct computation. Also the Fourier transforms of &lt;span class="math"&gt;\(W\)&lt;/span&gt; and (if the same template will be applied to several images) &lt;span class="math"&gt;\(T\)&lt;/span&gt; can be cached, further saving up computation time.&lt;/p&gt;
+&lt;p&gt;&lt;b&gt;Implementation&lt;/b&gt;&lt;/p&gt;
+&lt;p&gt;The C++ code below provides a basic implementation of the method outlined above. It uses the popular &lt;a href="http://opencv.org/"&gt;OpenCV&lt;/a&gt; library, with some further optimizations particular to its implementation of the Fourier transform, explained in the comments.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;opencv2/opencv.hpp&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;
+
+&lt;span class="k"&gt;static&lt;/span&gt; &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Scalar&lt;/span&gt; &lt;span class="n"&gt;ONE&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+&lt;span class="k"&gt;static&lt;/span&gt; &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Scalar&lt;/span&gt; &lt;span class="n"&gt;ZERO&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+&lt;span class="k"&gt;static&lt;/span&gt; &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Scalar&lt;/span&gt; &lt;span class="n"&gt;WHITE&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;255&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;255&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;255&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+&lt;span class="c1"&gt;// Fourier transform performance is not a monotonic function of a vector&lt;/span&gt;
+&lt;span class="c1"&gt;// size - matrices whose dimensions are powers of two are the fastest to&lt;/span&gt;
+&lt;span class="c1"&gt;// process, and multiples of 2, 3 and 5 (for example, 300 = 5*5*3*2*2) are&lt;/span&gt;
+&lt;span class="c1"&gt;// also processed quite efficiently. Therefore it makes sense to pad input&lt;/span&gt;
+&lt;span class="c1"&gt;// data with zeros to get a bit larger matrix that can be transformed much&lt;/span&gt;
+&lt;span class="c1"&gt;// faster than the original one.&lt;/span&gt;
+&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Size&lt;/span&gt; &lt;span class="n"&gt;fit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Size&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Size&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;getOptimalDFTSize&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;width&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+                  &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;getOptimalDFTSize&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;height&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt; &lt;span class="n"&gt;F_fwd&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Size&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="c1"&gt;// Pad input matrix to given size.&lt;/span&gt;
+  &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt; &lt;span class="n"&gt;P&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;m&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;height&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;rows&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;n&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;width&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;cols&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;copyMakeBorder&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;P&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;m&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;BORDER_CONSTANT&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;ZERO&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+  &lt;span class="c1"&gt;// Compute Fourier transform for input data. The last argument&lt;/span&gt;
+  &lt;span class="c1"&gt;// informs the dft() function of how many non-zero rows are there,&lt;/span&gt;
+  &lt;span class="c1"&gt;// so it can handle the rest of the rows more efficiently and save&lt;/span&gt;
+  &lt;span class="c1"&gt;// some time.&lt;/span&gt;
+  &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt; &lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;dft&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;P&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;rows&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+  &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt; &lt;span class="n"&gt;F_inv&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Size&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="c1"&gt;// Compute inverse Fourier transform for input data. The last&lt;/span&gt;
+  &lt;span class="c1"&gt;// argument informs the dft() function of how many non-zero&lt;/span&gt;
+  &lt;span class="c1"&gt;// rows are expected in the output, so it can handle the rest&lt;/span&gt;
+  &lt;span class="c1"&gt;// of the rows more efficiently and save some time.&lt;/span&gt;
+  &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt; &lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;dft&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;DFT_INVERSE&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;DFT_SCALE&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;height&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+  &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nf"&gt;I&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Rect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;width&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;height&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt; &lt;span class="n"&gt;C&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Size&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="c1"&gt;// Compute the Fourier transforms of template and image.&lt;/span&gt;
+  &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt; &lt;span class="n"&gt;F_T&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;F_fwd&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+  &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt; &lt;span class="n"&gt;F_I&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;F_fwd&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+  &lt;span class="c1"&gt;// Compute the cross correlation in the frequency domain.&lt;/span&gt;
+  &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt; &lt;span class="n"&gt;F_TI&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;mulSpectrums&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;F_I&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;F_T&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;F_TI&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;true&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+  &lt;span class="c1"&gt;// Compute the inverse Fourier transform of the cross-correlation,&lt;/span&gt;
+  &lt;span class="c1"&gt;// dismissing those rows and columns of the cross-correlation&lt;/span&gt;
+  &lt;span class="c1"&gt;// matrix that would require the template to &amp;quot;roll over&amp;quot; the image.&lt;/span&gt;
+  &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Size&lt;/span&gt; &lt;span class="n"&gt;clipped&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="n"&gt;clipped&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;width&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;cols&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;cols&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="n"&gt;clipped&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;height&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;rows&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;rows&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nf"&gt;F_inv&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;F_TI&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;clipped&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt; &lt;span class="n"&gt;W&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt; &lt;span class="n"&gt;CV_64F&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;ONE&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Point3f&lt;/span&gt; &lt;span class="n"&gt;matchTemplate&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="c1"&gt;// Compute the optimal size for DFT computing.&lt;/span&gt;
+  &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Size&lt;/span&gt; &lt;span class="n"&gt;size&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;fit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="p"&gt;());&lt;/span&gt;
+
+  &lt;span class="c1"&gt;//Compute the cross-correlation and normalizing matrix.&lt;/span&gt;
+  &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt; &lt;span class="n"&gt;C_TI&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;C&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+  &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt; &lt;span class="n"&gt;M_I&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;C&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;W&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;mul&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+  &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;i_s&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;j_s&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="kt"&gt;float&lt;/span&gt; &lt;span class="n"&gt;r&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;rows&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;C_TI&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;rows&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;cols&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;C_TI&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;cols&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="n"&gt;rows&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="o"&gt;++&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+  &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;j&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="n"&gt;j&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="n"&gt;cols&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="n"&gt;j&lt;/span&gt;&lt;span class="o"&gt;++&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="kt"&gt;float&lt;/span&gt; &lt;span class="n"&gt;v&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;C_TI&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;at&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="kt"&gt;double&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;j&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt; &lt;span class="n"&gt;sqrt&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;M_I&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;at&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="kt"&gt;double&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;j&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+      &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;r&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="n"&gt;v&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+      &lt;span class="p"&gt;{&lt;/span&gt;
+        &lt;span class="n"&gt;r&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;v&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+        &lt;span class="n"&gt;i_s&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+        &lt;span class="n"&gt;j_s&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;j&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+      &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt;
+
+  &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Point3f&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;j_s&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;i_s&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt; &lt;span class="n"&gt;L&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt; &lt;span class="n"&gt;L_I&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;L_F&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;cvtColor&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;L_I&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;CV_BGR2GRAY&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+  &lt;span class="n"&gt;L_I&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;convertTo&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;L_F&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;CV_64F&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+  &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;L_F&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;main&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;argc&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;argv&lt;/span&gt;&lt;span class="p"&gt;[])&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt; &lt;span class="n"&gt;T&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;imread&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;argv&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]);&lt;/span&gt;
+  &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt; &lt;span class="n"&gt;I&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;imread&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;argv&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;]);&lt;/span&gt;
+
+  &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Point3f&lt;/span&gt; &lt;span class="n"&gt;match&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;matchTemplate&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;L&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="n"&gt;L&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+  &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;rectangle&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Rect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;match&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;match&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;cols&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;rows&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="n"&gt;WHITE&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+  &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;imshow&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Template&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+  &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;imshow&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Image&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+  &lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;waitKey&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+
+  &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;script type="text/javascript"&gt;if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width &lt; 768) ? "left" : align;
+        indent = (screen.width &lt; 768) ? "0em" : indent;
+        linebreak = (screen.width &lt; 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/latest.js?config=TeX-AMS-MML_HTMLorMML';
+
+    var configscript = document.createElement('script');
+    configscript.type = 'text/x-mathjax-config';
+    configscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        availableFonts: ['STIX', 'TeX']," +
+        "        preferredFont: 'STIX'," +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(configscript);
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+&lt;/script&gt;</content><category term="Code"></category><category term="Computer Vision"></category></entry><entry><title>Controlling a differential drive robot in Gazebo from ROS</title><link href="http://xperroni.me/controlling-a-differential-drive-robot-in-gazebo-from-ros.html" rel="alternate"></link><published>2015-05-21T21:12:00-04:00</published><updated>2015-05-21T21:12:00-04:00</updated><author><name>Helio Perroni Filho</name></author><id>tag:xperroni.me,2015-05-21:/controlling-a-differential-drive-robot-in-gazebo-from-ros.html</id><summary type="html">&lt;p&gt;How to control a pure SDF Gazebo robot using ROS.&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;a href="http://gazebosim.org/"&gt;Gazebo&lt;/a&gt; is a simulation suite targeted at robotics projects, used by DARPA to implement the virtual part of its &lt;a href="http://spectrum.ieee.org/automaton/robotics/robotics-software/osrf-prepares-for-darpa-virtual-robotics-challenge"&gt;Robotics Challenge&lt;/a&gt;. It's a great companion to the &lt;a href="http://www.ros.org/"&gt;Robot Operating System&lt;/a&gt;, supporting &lt;a href="http://gazebosim.org/tutorials?cat=connect_ros"&gt;several ways&lt;/a&gt; to interface with it.&lt;/p&gt;
 &lt;p&gt;One recurrent question regarding Gazebo is how to control robots described in &lt;a href="http://sdformat.org/"&gt;Simulation Description Format (SDF)&lt;/a&gt; models from ROS. The more involved case of &lt;a href="http://gazebosim.org/tutorials?tut=ros_urdf&amp;amp;cat=connect_ros"&gt;porting a URDF model to Gazebo&lt;/a&gt; and &lt;a href="http://gazebosim.org/tutorials?tut=ros_control&amp;amp;cat=connect_ros"&gt;manipulating it through ROS Control&lt;/a&gt; interfaces is well documented, but what about a robot that already has a full SDF model available? Isn't it possible to just paste it into a Gazebo workspace and get some ROS topics to manipulate it?&lt;/p&gt;
 &lt;p&gt;The tutorial below covers this simpler case. It is based on the SDF model for the &lt;a href="http://www-lar.deis.unibo.it/equipments/p2dx/"&gt;Pioneer 2DX&lt;/a&gt; differential drive robot, which is available from Gazebo's default library. It also assumes ROS and Gazebo are already installed, as well as the necessary &lt;a href="http://gazebosim.org/tutorials?tut=ros_installing&amp;amp;cat=connect_ros"&gt;integration packages&lt;/a&gt; and &lt;a href="http://gazebosim.org/tutorials?tut=ros_gzplugins&amp;amp;cat=connect_ros"&gt;plugins&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;First, save the SDF world model below to your local filesystem as &lt;code&gt;pioneer2dx_ros.world&lt;/code&gt;:&lt;/p&gt;
@@ -807,14 +1047,14 @@
 
 
 &lt;p&gt;Open another terminal window, &lt;code&gt;cd&lt;/code&gt; to the folder containing &lt;code&gt;pioneer2dx_ros.world&lt;/code&gt; and enter:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;rosrun gazebo_ros gazebo -file pioneer2dx_ros.world
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ rosrun gazebo_ros gazebo -file pioneer2dx_ros.world
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;You should now have a Gazebo window opened with a Pioneer 2DX placed in the middle of an empty world.&lt;/p&gt;
-&lt;p&gt;&lt;img alt="Gazebo GUI" src="/images/articles/2015-05-21-01/snapshot.png"&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Gazebo GUI" src="http://xperroni.me/images/articles/2015-05-21-01/snapshot.png"&gt;&lt;/p&gt;
 &lt;p&gt;Finally, open a third terminal window (it's the last one, I promise) and check if the differential drive topics have been published:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;rostopic list
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ rostopic list
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -825,12 +1065,12 @@
 
 
 &lt;p&gt;You should now be able to get the robot moving by publishing messages to the &lt;code&gt;/pioneer2dx/cmd_vel&lt;/code&gt; topic, e.g.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;rostopic pub -1 /pioneer2dx/cmd_vel geometry_msgs/Twist \
-&amp;#39;{linear: {x: 1.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 1.0}}&amp;#39;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ rostopic pub -1 /pioneer2dx/cmd_vel geometry_msgs/Twist &lt;span class="se"&gt;\&lt;/span&gt;
+&lt;span class="s1"&gt;&amp;#39;{linear: {x: 1.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 1.0}}&amp;#39;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;Should get the robot running in a loop.&lt;/p&gt;</content><category term="Robotics"></category><category term="Tutorial"></category><category term="ROS"></category></entry><entry><title>A Python API for Lego MINDSTORMS NXT Alpha Rex Design</title><link href="/a-python-api-for-lego-mindstorms-nxt-alpha-rex-design.html" rel="alternate"></link><published>2011-01-19T17:01:00-05:00</published><updated>2011-01-19T17:01:00-05:00</updated><author><name>Helio Perroni Filho</name></author><id>tag:None,2011-01-19:/a-python-api-for-lego-mindstorms-nxt-alpha-rex-design.html</id><summary type="html">&lt;p&gt;How to control an NXT robot with Python.&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;strong&gt;Update:&lt;/strong&gt; &lt;em&gt;a properly-commented version of the code below made it to the &lt;a href="http://nxt-python.googlecode.com/svn/trunk/examples/alpharex.py"&gt;nxt-python repository&lt;/a&gt;. Yay me! :P&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;Should get the robot running in a loop.&lt;/p&gt;</content><category term="Code"></category><category term="Robotics"></category><category term="Tutorial"></category><category term="ROS"></category></entry><entry><title>A Python API for Lego MINDSTORMS NXT Alpha Rex Design</title><link href="http://xperroni.me/a-python-api-for-lego-mindstorms-nxt-alpha-rex-design.html" rel="alternate"></link><published>2011-01-19T17:01:00-05:00</published><updated>2011-01-19T17:01:00-05:00</updated><author><name>Helio Perroni Filho</name></author><id>tag:xperroni.me,2011-01-19:/a-python-api-for-lego-mindstorms-nxt-alpha-rex-design.html</id><summary type="html">&lt;p&gt;How to control an NXT robot with Python.&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;strong&gt;Update:&lt;/strong&gt; &lt;em&gt;a properly-commented version of the code below made it to the &lt;a href="http://nxt-python.googlecode.com/svn/trunk/examples/alpharex.py"&gt;nxt-python repository&lt;/a&gt;. Yay me! :P&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;Last week a friend of mine asked me to take his &lt;a href="http://en.wikipedia.org/wiki/Lego_Mindstorms_NXT"&gt;Lego MINDSTORMS NXT&lt;/a&gt; kit, build the &lt;a href="http://www.active-robots.com/products/mindstorms4schools/building-instructions.shtml"&gt;Alpha Rex&lt;/a&gt; design, and then demonstrate it to his father, who was a few days from returning to his home in Japan. Needless to say, having a chance to once again play with Lego – and in particular with the mind-blowingly nerdy, robotics-enabled NXT – was hardly unpleasant. In fact, while I was building the iconic bipedal robot – carefully and patiently following the instructions, taking the time to visualize how the pieces would fit together before actually connecting them, building the major parts before assembling them into the final model – I recognized just how similar to playing with Lego programming is, and how, during all those years of playtime, my mind was shaped for my current career in computing.&lt;/p&gt;
 &lt;p&gt;So it's no surprise that when it came to putting Alpha Rex to work, I snubbed NXT's &lt;a href="http://en.wikipedia.org/wiki/Lego_Mindstorms_NXT#NXT-G"&gt;Windows-based GUI tools&lt;/a&gt;, and looked instead for some way to program it from my Linux netbook, preferably in Python. Sure enough, after a little Googling, I stumbled at &lt;a href="http://code.google.com/p/nxt-python/"&gt;nxt-python&lt;/a&gt;, "a Python driver/interface for the Lego Mindstorms NXT robot". Though at first I was a little discouraged by the motor interface (I was expecting something more in line with NXT-G's, where you can send commands to up to all three motors simultaneously), eventually I was able to find my way around the API, and even come to admire its simplicity and straightforwardness.&lt;/p&gt;
 &lt;p&gt;The best part about nxt-python is Python itself. In just a couple hours I was able to write a rather sophisticated, object-oriented API to drive Alpha Rex and sample its various sensors – all in under 100 lines of code:&lt;/p&gt;
@@ -929,7 +1169,7 @@
 
 &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;AlphaRex&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;object&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
     &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="fm"&gt;__init__&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;brick&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;NXT&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
-        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="nb"&gt;isinstance&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;brick&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;basestring&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="nb"&gt;isinstance&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;brick&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;basestring&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
             &lt;span class="n"&gt;brick&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;find_one_brick&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;brick&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 
         &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;brick&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;brick&lt;/span&gt;
@@ -952,7 +1192,7 @@
 
     &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;say&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;line&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;times&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
         &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;times&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
-            &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;brick&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;play_sound_file&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;False&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;line&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;.rso&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;brick&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;play_sound_file&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kc"&gt;False&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;line&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;.rso&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
             &lt;span class="n"&gt;sleep&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 
     &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;see&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
@@ -998,7 +1238,7 @@
 &lt;/pre&gt;&lt;/div&gt;
 &lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
 
-&lt;p&gt;Playing with Alpha Rex was real fun, but now I'm afraid my next move (since my friend allowed me to keep the kit a while longer) will be to dismantle it. Unable to turn around or move its ultrasound sensors, it's rather limited in its navigation capabilities – and I'm dying to check out whether I can build a &lt;a href="http://en.wikipedia.org/wiki/Simultaneous_localization_and_mapping"&gt;SLAM&lt;/a&gt;-capable robot out of the basic kit. At any rate, it'll certainly be pleasant to try.&lt;/p&gt;</content><category term="Robotics"></category><category term="Tutorial"></category><category term="Python"></category></entry><entry><title>ChatterBean's Last Source Package</title><link href="/chatterbeans-last-source-package.html" rel="alternate"></link><published>2010-06-07T12:52:00-04:00</published><updated>2010-06-07T12:52:00-04:00</updated><author><name>Helio Perroni Filho</name></author><id>tag:None,2010-06-07:/chatterbeans-last-source-package.html</id><summary type="html">&lt;p&gt;What Chatterbean was and where to download its last source package.&lt;/p&gt;</summary><content type="html">&lt;p&gt;ChatterBean was my first personal, open-ended, open-source project. In 2006 I stopped working on it due to lack of time, dissatisfaction with the results of my own efforts, and a growing disillusionment with the chat bot paradigm as a whole (more about that in a future post). Then in 2007 I started my MSc course on artificial vision, prompting a change in research interests – from abstract rule-based to real-world statistical systems – that buried any lingering hopes that I would resume my work on chat bots.&lt;/p&gt;
+&lt;p&gt;Playing with Alpha Rex was real fun, but now I'm afraid my next move (since my friend allowed me to keep the kit a while longer) will be to dismantle it. Unable to turn around or move its ultrasound sensors, it's rather limited in its navigation capabilities – and I'm dying to check out whether I can build a &lt;a href="http://en.wikipedia.org/wiki/Simultaneous_localization_and_mapping"&gt;SLAM&lt;/a&gt;-capable robot out of the basic kit. At any rate, it'll certainly be pleasant to try.&lt;/p&gt;</content><category term="Code"></category><category term="Robotics"></category><category term="Tutorial"></category><category term="Python"></category></entry><entry><title>ChatterBean's Last Source Package</title><link href="http://xperroni.me/chatterbeans-last-source-package.html" rel="alternate"></link><published>2010-06-07T12:52:00-04:00</published><updated>2010-06-07T12:52:00-04:00</updated><author><name>Helio Perroni Filho</name></author><id>tag:xperroni.me,2010-06-07:/chatterbeans-last-source-package.html</id><summary type="html">&lt;p&gt;What Chatterbean was and where to download its last source package.&lt;/p&gt;</summary><content type="html">&lt;p&gt;ChatterBean was my first personal, open-ended, open-source project. In 2006 I stopped working on it due to lack of time, dissatisfaction with the results of my own efforts, and a growing disillusionment with the chat bot paradigm as a whole (more about that in a future post). Then in 2007 I started my MSc course on artificial vision, prompting a change in research interests – from abstract rule-based to real-world statistical systems – that buried any lingering hopes that I would resume my work on chat bots.&lt;/p&gt;
 &lt;p&gt;ChatterBean was abandoned before it could stand on its own either as a user application or developer framework; despite that, to this day I receive requests from programmers intending to use it as a basis for their own projects. Since the original project page went away along with Geocities, there has been no way to get the project's code other than asking me directly, but now I have uploaded the last source package to &lt;a href="https://sites.google.com/site/machineawakeningsvault/home/chatterbean.src.00.008.zip"&gt;Google Sites&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;The package contains the Java sources, AIML scraps used in the automated tests, and a copy of the project page as way of documentation. ChatterBean is (was?) licensed under the GPL, so it's pretty much open for whatever you might want to do with it.&lt;/p&gt;
-&lt;p&gt;Have fun.&lt;/p&gt;</content><category term="AI"></category><category term="Project"></category><category term="Java"></category></entry></feed>
+&lt;p&gt;Have fun.&lt;/p&gt;</content><category term="Code"></category><category term="AI"></category><category term="Project"></category><category term="Java"></category></entry></feed>
