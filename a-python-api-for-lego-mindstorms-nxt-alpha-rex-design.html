@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+        <title>A Python API for Lego MINDSTORMS NXT Alpha Rex Design</title>
+        <meta charset="utf-8" />
+        <link href="https://xperroni.me/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Home Page of Helio Perroni Filho Full Atom Feed" />
+        <link href="https://xperroni.me/feeds/code.atom.xml" type="application/atom+xml" rel="alternate" title="Home Page of Helio Perroni Filho Categories Atom Feed" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="./theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="./theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="./theme/pygment.css" />
+
+        <script src="./theme/js/libs/modernizr-2.6.2.min.js"></script>
+
+
+
+
+</head>
+
+<body id="index" class="home">
+
+
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1><a href="./">Home Page of Helio Perroni Filho <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+             
+              <ul class="columns">
+                <li><a href="./">Home</a></li>
+
+                <li><a href="/posts.html">Posts</a></li>
+                <li><a href="./pages/projects.html">Projects</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+
+   <div class="row">
+        <div class="eleven columns">
+
+
+            <header>
+              <h2 class="entry-title">
+                <a href="./a-python-api-for-lego-mindstorms-nxt-alpha-rex-design.html" rel="bookmark"
+                   title="Permalink to A Python API for Lego MINDSTORMS NXT Alpha Rex Design">A Python API for Lego MINDSTORMS NXT Alpha Rex Design</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2011-01-19T17:01:00-05:00">
+                Wed 19 January 2011
+              </abbr>
+              <address class="vcard author">By 
+                <a class="url fn" href="./author/helio-perroni-filho.html"> Helio Perroni Filho</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <p><strong>Update:</strong> <em>a properly-commented version of the code below made it to the <a href="http://nxt-python.googlecode.com/svn/trunk/examples/alpharex.py">nxt-python repository</a>. Yay me! :P</em></p>
+<p>Last week a friend of mine asked me to take his <a href="http://en.wikipedia.org/wiki/Lego_Mindstorms_NXT">Lego MINDSTORMS NXT</a> kit, build the <a href="http://www.active-robots.com/products/mindstorms4schools/building-instructions.shtml">Alpha Rex</a> design, and then demonstrate it to his father, who was a few days from returning to his home in Japan. Needless to say, having a chance to once again play with Lego – and in particular with the mind-blowingly nerdy, robotics-enabled NXT – was hardly unpleasant. In fact, while I was building the iconic bipedal robot – carefully and patiently following the instructions, taking the time to visualize how the pieces would fit together before actually connecting them, building the major parts before assembling them into the final model – I recognized just how similar to playing with Lego programming is, and how, during all those years of playtime, my mind was shaped for my current career in computing.</p>
+<p>So it's no surprise that when it came to putting Alpha Rex to work, I snubbed NXT's <a href="http://en.wikipedia.org/wiki/Lego_Mindstorms_NXT#NXT-G">Windows-based GUI tools</a>, and looked instead for some way to program it from my Linux netbook, preferably in Python. Sure enough, after a little Googling, I stumbled at <a href="http://code.google.com/p/nxt-python/">nxt-python</a>, "a Python driver/interface for the Lego Mindstorms NXT robot". Though at first I was a little discouraged by the motor interface (I was expecting something more in line with NXT-G's, where you can send commands to up to all three motors simultaneously), eventually I was able to find my way around the API, and even come to admire its simplicity and straightforwardness.</p>
+<p>The best part about nxt-python is Python itself. In just a couple hours I was able to write a rather sophisticated, object-oriented API to drive Alpha Rex and sample its various sensors – all in under 100 lines of code:</p>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">sleep</span>
+
+<span class="kn">from</span> <span class="nn">nxt.brick</span> <span class="kn">import</span> <span class="n">Brick</span>
+<span class="kn">from</span> <span class="nn">nxt.locator</span> <span class="kn">import</span> <span class="n">find_one_brick</span>
+<span class="kn">from</span> <span class="nn">nxt.motor</span> <span class="kn">import</span> <span class="n">Motor</span><span class="p">,</span> <span class="n">PORT_A</span><span class="p">,</span> <span class="n">PORT_B</span><span class="p">,</span> <span class="n">PORT_C</span>
+<span class="kn">from</span> <span class="nn">nxt.sensor</span> <span class="kn">import</span> <span class="n">Light</span><span class="p">,</span> <span class="n">Sound</span><span class="p">,</span> <span class="n">Touch</span><span class="p">,</span> <span class="n">Ultrasonic</span>
+<span class="kn">from</span> <span class="nn">nxt.sensor</span> <span class="kn">import</span> <span class="n">PORT_1</span><span class="p">,</span> <span class="n">PORT_2</span><span class="p">,</span> <span class="n">PORT_3</span><span class="p">,</span> <span class="n">PORT_4</span>
+
+
+<span class="n">FORTH</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">BACK</span> <span class="o">=</span> <span class="o">-</span><span class="mi">100</span>
+
+
+<span class="k">class</span> <span class="nc">AlphaRex</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">brick</span><span class="o">=</span><span class="s1">&#39;NXT&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">brick</span><span class="p">,</span> <span class="n">basestring</span><span class="p">):</span>
+            <span class="n">brick</span> <span class="o">=</span> <span class="n">find_one_brick</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">brick</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">brick</span> <span class="o">=</span> <span class="n">brick</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">arms</span> <span class="o">=</span> <span class="n">Motor</span><span class="p">(</span><span class="n">brick</span><span class="p">,</span> <span class="n">PORT_A</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">legs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Motor</span><span class="p">(</span><span class="n">brick</span><span class="p">,</span> <span class="n">PORT_B</span><span class="p">),</span> <span class="n">Motor</span><span class="p">(</span><span class="n">brick</span><span class="p">,</span> <span class="n">PORT_C</span><span class="p">)]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">touch</span> <span class="o">=</span> <span class="n">Touch</span><span class="p">(</span><span class="n">brick</span><span class="p">,</span> <span class="n">PORT_1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sound</span> <span class="o">=</span> <span class="n">Sound</span><span class="p">(</span><span class="n">brick</span><span class="p">,</span> <span class="n">PORT_2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">light</span> <span class="o">=</span> <span class="n">Light</span><span class="p">(</span><span class="n">brick</span><span class="p">,</span> <span class="n">PORT_3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ultrasonic</span> <span class="o">=</span> <span class="n">Ultrasonic</span><span class="p">(</span><span class="n">brick</span><span class="p">,</span> <span class="n">PORT_4</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">echolocate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ultrasonic</span><span class="o">.</span><span class="n">get_sample</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">feel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">touch</span><span class="o">.</span><span class="n">get_sample</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">hear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sound</span><span class="o">.</span><span class="n">get_sample</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">say</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">times</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">times</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">brick</span><span class="o">.</span><span class="n">play_sound_file</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="n">line</span> <span class="o">+</span> <span class="s1">&#39;.rso&#39;</span><span class="p">)</span>
+            <span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">see</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">light</span><span class="o">.</span><span class="n">get_sample</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">walk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">secs</span><span class="p">,</span> <span class="n">power</span><span class="o">=</span><span class="n">FORTH</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">motor</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">legs</span><span class="p">:</span>
+            <span class="n">motor</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">power</span><span class="o">=</span><span class="n">power</span><span class="p">)</span>
+
+        <span class="n">sleep</span><span class="p">(</span><span class="n">secs</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">motor</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">legs</span><span class="p">:</span>
+            <span class="n">motor</span><span class="o">.</span><span class="n">idle</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">wave</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">secs</span><span class="p">,</span> <span class="n">power</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">arms</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">power</span><span class="o">=</span><span class="n">power</span><span class="p">)</span>
+        <span class="n">sleep</span><span class="p">(</span><span class="n">secs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">arms</span><span class="o">.</span><span class="n">idle</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">wave_and_talk</span><span class="p">():</span>
+    <span class="n">robot</span> <span class="o">=</span> <span class="n">AlphaRex</span><span class="p">()</span>
+    <span class="n">robot</span><span class="o">.</span><span class="n">wave</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">robot</span><span class="o">.</span><span class="n">say</span><span class="p">(</span><span class="s1">&#39;Object&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">walk_forth_and_back</span><span class="p">():</span>
+    <span class="n">robot</span> <span class="o">=</span> <span class="n">AlphaRex</span><span class="p">()</span>
+    <span class="n">robot</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">FORTH</span><span class="p">)</span>
+    <span class="n">robot</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">BACK</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">walk_to_object</span><span class="p">():</span>
+    <span class="n">robot</span> <span class="o">=</span> <span class="n">AlphaRex</span><span class="p">()</span>
+    <span class="k">while</span> <span class="n">robot</span><span class="o">.</span><span class="n">echolocate</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
+        <span class="n">robot</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">FORTH</span><span class="p">)</span>
+
+<span class="n">robot</span><span class="o">.</span><span class="n">say</span><span class="p">(</span><span class="s1">&#39;Object.rso&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">wave_and_talk</span><span class="p">()</span>
+</code></pre></div>
+</td></tr></table>
+<p>Playing with Alpha Rex was real fun, but now I'm afraid my next move (since my friend allowed me to keep the kit a while longer) will be to dismantle it. Unable to turn around or move its ultrasound sensors, it's rather limited in its navigation capabilities – and I'm dying to check out whether I can build a <a href="http://en.wikipedia.org/wiki/Simultaneous_localization_and_mapping">SLAM</a>-capable robot out of the basic kit. At any rate, it'll certainly be pleasant to try.</p>
+            </div><!-- /.entry-content -->
+
+
+        </div><!-- /.eleven.columns -->
+
+<div class="three columns">
+
+  <h4>Pages</h4>
+
+  <ul>
+    <li><a href="/posts.html">Posts</a></li>
+
+    <li ><a href="./pages/projects.html">Projects</a></li>
+  
+
+
+
+
+
+</div> </div><!-- /.row -->
+
+
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+    
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+  <script src="./theme/js/libs/jquery-1.9.1.min.js"></script>
+  <script src="./theme/js/libs/gumby.min.js"></script>
+  <script src="./theme/js/plugins.js"></script>
+</body>
+</html>

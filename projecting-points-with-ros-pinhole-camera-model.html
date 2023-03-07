@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+        <title>Projecting Points with ROS Pinhole Camera Model</title>
+        <meta charset="utf-8" />
+        <link href="https://xperroni.me/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Home Page of Helio Perroni Filho Full Atom Feed" />
+        <link href="https://xperroni.me/feeds/code.atom.xml" type="application/atom+xml" rel="alternate" title="Home Page of Helio Perroni Filho Categories Atom Feed" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="./theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="./theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="./theme/pygment.css" />
+
+        <script src="./theme/js/libs/modernizr-2.6.2.min.js"></script>
+
+
+
+
+</head>
+
+<body id="index" class="home">
+
+
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+                  <h1><a href="./">Home Page of Helio Perroni Filho <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+             
+              <ul class="columns">
+                <li><a href="./">Home</a></li>
+
+                <li><a href="/posts.html">Posts</a></li>
+                <li><a href="./pages/projects.html">Projects</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+
+   <div class="row">
+        <div class="eleven columns">
+
+
+            <header>
+              <h2 class="entry-title">
+                <a href="./projecting-points-with-ros-pinhole-camera-model.html" rel="bookmark"
+                   title="Permalink to Projecting Points with ROS Pinhole Camera Model">Projecting Points with ROS Pinhole Camera Model</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2017-11-05T17:00:00-05:00">
+                Sun 05 November 2017
+              </abbr>
+              <address class="vcard author">By 
+                <a class="url fn" href="./author/helio-perroni-filho.html"> Helio Perroni Filho</a>
+              </address>
+            </footer><!-- /.post-info -->
+            <div class="entry-content">
+              <p>A common task in robotics-related Computer Vision projects is <a href="https://jordicenzano.name/front-test/2d-3d-paradigm-overview-2011/camera-model/">projecting</a> a 3D point into the 2D image plane of a camera, or vice-versa. In ROS this can be achieved very easily with the help of classes <a href="docs.ros.org/electric/api/tf/html/python/tf_python.html">tf.TransformListener</a> and <a href="http://docs.ros.org/diamondback/api/image_geometry/html/c++/classimage__geometry_1_1PinholeCameraModel.html">image_geometry.PinholeCameraModel</a>.</p>
+<p>Given an arbitrary 3D point in world coordinates, the first step is to convert its coordinates from the global reference frame to a camera-centric frame. Given a tuple <code>p_3d</code> containing global coordinates of a point, and assuming there is a <a href="http://wiki.ros.org/tf">tf</a> broadcaster publishing transforms between the <code>/world</code> (global) and <code>/base_link</code> (camera-centric) frames, the code below transforms <code>p_3d</code> to camera-centric coordinates:</p>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="n">p_world</span> <span class="o">=</span> <span class="n">PointStamped</span><span class="p">()</span>
+<span class="n">p_world</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">seq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">camera_image</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">seq</span>
+<span class="n">p_world</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">stamp</span> <span class="o">=</span> <span class="n">stamp</span>
+<span class="n">p_world</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">frame_id</span> <span class="o">=</span> <span class="s1">&#39;/world&#39;</span>
+<span class="n">p_world</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">p_3d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">p_world</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">p_3d</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">p_world</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">p_3d</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+<span class="n">listener</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">TransformListener</span><span class="p">()</span>
+<span class="n">listener</span><span class="o">.</span><span class="n">waitForTransform</span><span class="p">(</span><span class="s1">&#39;/base_link&#39;</span><span class="p">,</span> <span class="s1">&#39;/world&#39;</span><span class="p">,</span> <span class="n">stamp</span><span class="p">,</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Duration</span><span class="p">(</span><span class="mf">1.0</span><span class="p">))</span>
+<span class="n">p_camera</span> <span class="o">=</span> <span class="n">listener</span><span class="o">.</span><span class="n">transformPoint</span><span class="p">(</span><span class="s1">&#39;/base_link&#39;</span><span class="p">,</span> <span class="n">p_world</span><span class="p">)</span>
+</code></pre></div>
+</td></tr></table>
+<p>The camera-centric point <code>p_camera</code> can then be projected into the image as in the code below:</p>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="c1"># The navigation frame has X pointing forward, Y left and Z up, whereas the</span>
+<span class="c1"># vision frame has X pointing right, Y down and Z forward; hence the need to</span>
+<span class="c1"># reassign axes here.</span>
+<span class="n">x</span> <span class="o">=</span> <span class="o">-</span><span class="n">p_camera</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">y</span>
+<span class="n">y</span> <span class="o">=</span> <span class="o">-</span><span class="n">p_camera</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">z</span>
+<span class="n">z</span> <span class="o">=</span> <span class="n">p_camera</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">x</span>
+
+<span class="n">camera</span> <span class="o">=</span> <span class="n">PinholeCameraModel</span><span class="p">()</span>
+<span class="n">camera</span><span class="o">.</span><span class="n">fromCameraInfo</span><span class="p">(</span><span class="n">camera_info</span><span class="p">)</span>
+<span class="n">p_image</span> <span class="o">=</span> <span class="n">camera</span><span class="o">.</span><span class="n">project3dToPixel</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">))</span>
+</code></pre></div>
+</td></tr></table>
+<p>The <code>camera_info</code> argument is an instance of the <a href="http://docs.ros.org/api/sensor_msgs/html/msg/CameraInfo.html">sensor_msgs.msg.CameraInfo</a> message class, it can be instantiated locally or received through a topic.</p>
+<p>Notice that in real-world applications, rather than locally instantiating <code>tf.TransformListener</code> and <code>image_geometry.PinholeCameraModel</code> objects as in the code above, they'd more likely be instantiated once and kept as attributes of a node object.</p>
+            </div><!-- /.entry-content -->
+
+
+        </div><!-- /.eleven.columns -->
+
+<div class="three columns">
+
+  <h4>Pages</h4>
+
+  <ul>
+    <li><a href="/posts.html">Posts</a></li>
+
+    <li ><a href="./pages/projects.html">Projects</a></li>
+  
+
+
+
+
+
+</div> </div><!-- /.row -->
+
+
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+    
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+  <script src="./theme/js/libs/jquery-1.9.1.min.js"></script>
+  <script src="./theme/js/libs/gumby.min.js"></script>
+  <script src="./theme/js/plugins.js"></script>
+</body>
+</html>

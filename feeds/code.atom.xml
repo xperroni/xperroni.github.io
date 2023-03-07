@@ -1,0 +1,1234 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Home Page of Helio Perroni Filho - Code</title><link href="https://xperroni.me/" rel="alternate"></link><link href="https://xperroni.me/feeds/code.atom.xml" rel="self"></link><id>https://xperroni.me/</id><updated>2017-11-05T17:00:00-05:00</updated><entry><title>Projecting Points with ROS Pinhole Camera Model</title><link href="https://xperroni.me/projecting-points-with-ros-pinhole-camera-model.html" rel="alternate"></link><published>2017-11-05T17:00:00-05:00</published><updated>2017-11-05T17:00:00-05:00</updated><author><name>Helio Perroni Filho</name></author><id>tag:xperroni.me,2017-11-05:/projecting-points-with-ros-pinhole-camera-model.html</id><summary type="html">&lt;p&gt;How to project world points into a camera plane in ROS.&lt;/p&gt;</summary><content type="html">&lt;p&gt;A common task in robotics-related Computer Vision projects is &lt;a href="https://jordicenzano.name/front-test/2d-3d-paradigm-overview-2011/camera-model/"&gt;projecting&lt;/a&gt; a 3D point into the 2D image plane of a camera, or vice-versa. In ROS this can be achieved very easily with the help of classes &lt;a href="docs.ros.org/electric/api/tf/html/python/tf_python.html"&gt;tf.TransformListener&lt;/a&gt; and &lt;a href="http://docs.ros.org/diamondback/api/image_geometry/html/c++/classimage__geometry_1_1PinholeCameraModel.html"&gt;image_geometry.PinholeCameraModel&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Given an arbitrary 3D point in world coordinates, the first step is to convert its coordinates from the global reference frame to a camera-centric frame. Given a tuple &lt;code&gt;p_3d&lt;/code&gt; containing global coordinates of a point, and assuming there is a &lt;a href="http://wiki.ros.org/tf"&gt;tf&lt;/a&gt; broadcaster publishing transforms between the &lt;code&gt;/world&lt;/code&gt; (global) and &lt;code&gt;/base_link&lt;/code&gt; (camera-centric) frames, the code below transforms &lt;code&gt;p_3d&lt;/code&gt; to camera-centric coordinates:&lt;/p&gt;
+&lt;table class="highlighttable"&gt;&lt;tr&gt;&lt;td class="linenos"&gt;&lt;div class="linenodiv"&gt;&lt;pre&gt;&lt;span class="normal"&gt; 1&lt;/span&gt;
+&lt;span class="normal"&gt; 2&lt;/span&gt;
+&lt;span class="normal"&gt; 3&lt;/span&gt;
+&lt;span class="normal"&gt; 4&lt;/span&gt;
+&lt;span class="normal"&gt; 5&lt;/span&gt;
+&lt;span class="normal"&gt; 6&lt;/span&gt;
+&lt;span class="normal"&gt; 7&lt;/span&gt;
+&lt;span class="normal"&gt; 8&lt;/span&gt;
+&lt;span class="normal"&gt; 9&lt;/span&gt;
+&lt;span class="normal"&gt;10&lt;/span&gt;
+&lt;span class="normal"&gt;11&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/td&gt;&lt;td class="code"&gt;&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;p_world&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;PointStamped&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="n"&gt;p_world&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;header&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;seq&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;camera_image&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;header&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;seq&lt;/span&gt;
+&lt;span class="n"&gt;p_world&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;header&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;stamp&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;stamp&lt;/span&gt;
+&lt;span class="n"&gt;p_world&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;header&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;frame_id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;/world&amp;#39;&lt;/span&gt;
+&lt;span class="n"&gt;p_world&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;point&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;p_3d&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;span class="n"&gt;p_world&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;point&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;p_3d&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;span class="n"&gt;p_world&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;point&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;z&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;p_3d&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+
+&lt;span class="n"&gt;listener&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;tf&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;TransformListener&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="n"&gt;listener&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;waitForTransform&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;/base_link&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;/world&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;stamp&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;rospy&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Duration&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;1.0&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+&lt;span class="n"&gt;p_camera&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;listener&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;transformPoint&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;/base_link&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;p_world&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;p&gt;The camera-centric point &lt;code&gt;p_camera&lt;/code&gt; can then be projected into the image as in the code below:&lt;/p&gt;
+&lt;table class="highlighttable"&gt;&lt;tr&gt;&lt;td class="linenos"&gt;&lt;div class="linenodiv"&gt;&lt;pre&gt;&lt;span class="normal"&gt; 1&lt;/span&gt;
+&lt;span class="normal"&gt; 2&lt;/span&gt;
+&lt;span class="normal"&gt; 3&lt;/span&gt;
+&lt;span class="normal"&gt; 4&lt;/span&gt;
+&lt;span class="normal"&gt; 5&lt;/span&gt;
+&lt;span class="normal"&gt; 6&lt;/span&gt;
+&lt;span class="normal"&gt; 7&lt;/span&gt;
+&lt;span class="normal"&gt; 8&lt;/span&gt;
+&lt;span class="normal"&gt; 9&lt;/span&gt;
+&lt;span class="normal"&gt;10&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/td&gt;&lt;td class="code"&gt;&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="c1"&gt;# The navigation frame has X pointing forward, Y left and Z up, whereas the&lt;/span&gt;
+&lt;span class="c1"&gt;# vision frame has X pointing right, Y down and Z forward; hence the need to&lt;/span&gt;
+&lt;span class="c1"&gt;# reassign axes here.&lt;/span&gt;
+&lt;span class="n"&gt;x&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;p_camera&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;point&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;
+&lt;span class="n"&gt;y&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;p_camera&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;point&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;z&lt;/span&gt;
+&lt;span class="n"&gt;z&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;p_camera&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;point&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;
+
+&lt;span class="n"&gt;camera&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;PinholeCameraModel&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="n"&gt;camera&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;fromCameraInfo&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;camera_info&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="n"&gt;p_image&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;camera&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;project3dToPixel&lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;z&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;p&gt;The &lt;code&gt;camera_info&lt;/code&gt; argument is an instance of the &lt;a href="http://docs.ros.org/api/sensor_msgs/html/msg/CameraInfo.html"&gt;sensor_msgs.msg.CameraInfo&lt;/a&gt; message class, it can be instantiated locally or received through a topic.&lt;/p&gt;
+&lt;p&gt;Notice that in real-world applications, rather than locally instantiating &lt;code&gt;tf.TransformListener&lt;/code&gt; and &lt;code&gt;image_geometry.PinholeCameraModel&lt;/code&gt; objects as in the code above, they'd more likely be instantiated once and kept as attributes of a node object.&lt;/p&gt;</content><category term="Code"></category><category term="Robotics"></category><category term="Tutorial"></category><category term="Python"></category><category term="ROS"></category></entry><entry><title>FFT-based cosine similarity for fast template matching</title><link href="https://xperroni.me/fft-based-cosine-similarity-for-fast-template-matching.html" rel="alternate"></link><published>2015-12-21T22:51:00-05:00</published><updated>2015-12-21T22:51:00-05:00</updated><author><name>Helio Perroni Filho</name></author><id>tag:xperroni.me,2015-12-21:/fft-based-cosine-similarity-for-fast-template-matching.html</id><summary type="html">&lt;p&gt;How to perform fast image template matching using Finite Fourier Transforms&lt;/p&gt;</summary><content type="html">&lt;p&gt;A common task in computer vision applications is &lt;a href="https://en.wikipedia.org/wiki/Template_matching"&gt;template matching&lt;/a&gt;, the search for a comparatively small image patch – or more likely, its closest approximation – in a larger image. In its simplest form, this implies solving the following optimization:&lt;/p&gt;
+&lt;div class="math"&gt;\begin{equation}
+(i^*, j^*) = \arg \max_{i,j} s(T, P_{i,j})
+\label{eq:tm}
+\end{equation}&lt;/div&gt;
+&lt;p&gt;Where the similarity metric &lt;span class="math"&gt;\(s(T, P_{i,j})\)&lt;/span&gt; is defined between a template &lt;span class="math"&gt;\(T^{m_t \times n_t}\)&lt;/span&gt; and all patches &lt;span class="math"&gt;\(P^{m_t \times n_t}_{i,j}\)&lt;/span&gt; such that:&lt;/p&gt;
+&lt;div class="math"&gt;\begin{equation}
+P^{m_t \times n_t}_{i,j} = I[i:i+m_t,j:j+n_t]
+\label{eq:p}
+\end{equation}&lt;/div&gt;
+&lt;p&gt;For an image &lt;span class="math"&gt;\(I^{m \times n}\)&lt;/span&gt; with &lt;span class="math"&gt;\(m_t \ll m\)&lt;/span&gt; and &lt;span class="math"&gt;\(n_t \ll n\)&lt;/span&gt; (i.e. the image is much larger than the template). A common choice of similarity metric is &lt;a href="https://en.wikipedia.org/wiki/Cosine_similarity"&gt;cosine similarity&lt;/a&gt;, which is defined as:&lt;/p&gt;
+&lt;div class="math"&gt;\begin{equation}
+cos(A, B) = \frac{A \cdot B}{\|A\| \|B\|} = \frac{\displaystyle\sum^{m,n}_{i,j} A[i,j]B[i,j]}{\sqrt{\displaystyle\sum^{m,n}_{i,j} A[i,j]^2 \displaystyle\sum^{m,n}_{i,j} B[i,j]^2}}
+\label{eq:cos}
+\end{equation}&lt;/div&gt;
+&lt;p&gt;Cosine similarity is a reliable metric, but as defined above its evaluation is rather costly. Combining formulas \eqref{eq:tm}, \eqref{eq:p} and \eqref{eq:cos} gives:&lt;/p&gt;
+&lt;div class="math"&gt;\begin{equation}
+(i^*, j^*) = \arg \max_{i,j} \frac{\displaystyle\sum^{m_t,n_t}_{i_t,j_t} T[i_t,j_t] I[i + i_t, j + j_t]}{\sqrt{\displaystyle\sum^{m_t,n_t}_{i_t,j_t} T[i_t,j_t]^2 \displaystyle\sum^{m_t,n_t}_{i_t,j_t} I[i + i_t, j + j_t]^2}}
+\label{eq:tm_cos}
+\end{equation}&lt;/div&gt;
+&lt;p&gt;Which is of time complexity &lt;span class="math"&gt;\(\mathrm{O}(m \, n \, m_tn_t)\)&lt;/span&gt; – i.e. the size of the template times the size of the image. Depending on image and template sizes, the intended use case (e.g. batch vs. real-time) or scale of the template matching task (e.g. a couple dozen vs. thousands of images), this may incur in prohibitive processing costs.&lt;/p&gt;
+&lt;p&gt;Cosine similarity template matching can be sped up with application of the &lt;a href="https://en.wikipedia.org/wiki/Convolution_theorem"&gt;convolution theorem&lt;/a&gt;. First, let's redefine formula \eqref{eq:tm_cos} as:&lt;/p&gt;
+&lt;div class="math"&gt;\begin{equation}
+(i^*, j^*) = \arg \max_{i,j} \frac{D_{T, I}[i,j]}{\sqrt{m_T M_I[i,j]}}
+\label{eq:tm_cos_2}
+\end{equation}&lt;/div&gt;
+&lt;p&gt;Where:&lt;/p&gt;
+&lt;div class="math"&gt;\begin{equation}
+D_{T, I}[i,j] = \displaystyle\sum^{m_t,n_t}_{i_t,j_t} T[i_t,j_t] I[i + i_t, j + j_t]
+\label{eq:D_TI}
+\end{equation}&lt;/div&gt;
+&lt;div class="math"&gt;\begin{equation}
+m_T = \displaystyle\sum^{m_t,n_t}_{i_t,j_t} T[i_t,j_t]^2
+\label{eq:m_T}
+\end{equation}&lt;/div&gt;
+&lt;div class="math"&gt;\begin{equation}
+M_I[i,j] = \displaystyle\sum^{m_t,n_t}_{i_t,j_t} I[i + i_t, j + j_t]^2
+\label{eq:M_I}
+\end{equation}&lt;/div&gt;
+&lt;p&gt;Looking into the three terms above, it's clear that \eqref{eq:m_T} is constant for any given &lt;span class="math"&gt;\(T\)&lt;/span&gt; and can therefore be left out of the computation. On the other hand, \eqref{eq:D_TI} is just the &lt;a href="https://en.wikipedia.org/wiki/Cross-correlation"&gt;cross-correlation&lt;/a&gt; between &lt;span class="math"&gt;\(T\)&lt;/span&gt; and &lt;span class="math"&gt;\(I\)&lt;/span&gt;, which by the convolution theorem can also be computed as:&lt;/p&gt;
+&lt;div class="math"&gt;\begin{equation}
+D_{T, I} = \mathcal{F}^{-1}(\mathcal{F}(T)^{*} \circ \mathcal{F}(I))
+\end{equation}&lt;/div&gt;
+&lt;p&gt;Where &lt;span class="math"&gt;\(\mathcal{F}\)&lt;/span&gt; is the &lt;a href="https://en.wikipedia.org/wiki/Fourier_transform"&gt;fourier transform&lt;/a&gt; operator, &lt;span class="math"&gt;\(\mathcal{F}^{-1}\)&lt;/span&gt; the inverse transform, the asterisk denotes the &lt;a href="https://en.wikipedia.org/wiki/Complex_conjugate"&gt;complex conjugate&lt;/a&gt;, and &lt;span class="math"&gt;\(\circ\)&lt;/span&gt; is the &lt;a href="https://en.wikipedia.org/wiki/Hadamard_product_%28matrices%29"&gt;Hadamard product&lt;/a&gt; (element-wise multiplication) of the two transforms. Likewise, \eqref{eq:M_I} can be computed as the cross-correlation between &lt;span class="math"&gt;\(I^2\)&lt;/span&gt; and a window filter &lt;span class="math"&gt;\(W^{m_t \times n_t} = [w_{ij} = 1]\)&lt;/span&gt;:&lt;/p&gt;
+&lt;div class="math"&gt;\begin{equation}
+M_I = \mathcal{F}^{-1}(\mathcal{F}(W)^{*} \circ \mathcal{F}(I^2))
+\end{equation}&lt;/div&gt;
+&lt;p&gt;The advantage of this approach is that algorithms such as the &lt;a href="https://en.wikipedia.org/wiki/Fast_Fourier_transform"&gt;Fast Fourier Transform&lt;/a&gt; (FFT) are of time complexity &lt;span class="math"&gt;\(\mathrm{O}(m \, n \, log \, m \, n)\)&lt;/span&gt;, which depending on the relative sizes of &lt;span class="math"&gt;\(T\)&lt;/span&gt; and &lt;span class="math"&gt;\(I\)&lt;/span&gt; may be faster than the &lt;span class="math"&gt;\(\mathrm{O}(m \, n \, m_t n_t)\)&lt;/span&gt; of the direct computation. Also the Fourier transforms of &lt;span class="math"&gt;\(W\)&lt;/span&gt; and (if the same template will be applied to several images) &lt;span class="math"&gt;\(T\)&lt;/span&gt; can be cached, further saving up computation time.&lt;/p&gt;
+&lt;p&gt;&lt;b&gt;Implementation&lt;/b&gt;&lt;/p&gt;
+&lt;p&gt;The C++ code below provides a basic implementation of the method outlined above. It uses the popular &lt;a href="http://opencv.org/"&gt;OpenCV&lt;/a&gt; library, with some further optimizations particular to its implementation of the Fourier transform, explained in the comments.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="c1"&gt;#include &amp;amp;lt;opencv2/opencv.hpp&amp;gt;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="k"&gt;static&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Scalar&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ONE&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="k"&gt;static&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Scalar&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ZERO&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="k"&gt;static&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Scalar&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;WHITE&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;255&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;255&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;255&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Fourier&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;transform&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;performance&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;is&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ow"&gt;not&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;monotonic&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;function&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;of&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;vector&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;matrices&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;whose&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;dimensions&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;are&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;powers&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;of&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;two&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;are&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;the&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;fastest&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;to&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;process&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ow"&gt;and&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;multiples&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;of&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ow"&gt;and&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;example&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;300&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;are&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;also&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;processed&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;quite&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;efficiently&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Therefore&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;it&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;makes&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;sense&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;to&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pad&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;input&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;with&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;zeros&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;to&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;a&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;bit&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;larger&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;matrix&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;that&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;can&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;be&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;transformed&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;much&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;faster&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;than&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;the&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;original&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;one&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Size&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;fit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Size&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Size&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;getOptimalDFTSize&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;width&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;                  &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;getOptimalDFTSize&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;height&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;F_fwd&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Size&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Pad&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;input&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;matrix&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;to&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;given&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;P&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="nb nb-Type"&gt;int&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;m&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;height&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;rows&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="nb nb-Type"&gt;int&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;width&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;cols&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;copyMakeBorder&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;P&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;m&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;BORDER_CONSTANT&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ZERO&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Compute&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Fourier&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;transform&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;input&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;The&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;argument&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;informs&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;the&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;dft&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;function&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;of&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;how&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;many&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;non&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;zero&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;rows&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;are&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;there&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;so&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;it&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;can&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;handle&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;the&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;rest&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;of&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;the&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;rows&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;more&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;efficiently&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ow"&gt;and&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;save&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;some&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;time&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;dft&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;P&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;rows&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;F_inv&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Size&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Compute&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;inverse&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Fourier&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;transform&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;input&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;The&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;argument&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;informs&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;the&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;dft&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;function&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;of&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;how&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;many&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;non&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;zero&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;rows&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;are&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;expected&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ow"&gt;in&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;the&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;output&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;so&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;it&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;can&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;handle&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;the&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;rest&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;of&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;the&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;rows&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;more&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;efficiently&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ow"&gt;and&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;save&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;some&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;time&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;dft&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;F&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;DFT_INVERSE&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;DFT_SCALE&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;height&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Rect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;width&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;height&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;C&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Size&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Compute&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;the&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Fourier&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;transforms&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;of&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;template&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ow"&gt;and&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;image&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;F_T&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;F_fwd&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;F_I&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;F_fwd&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Compute&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;the&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cross&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;correlation&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ow"&gt;in&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;the&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;frequency&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;domain&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;F_TI&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;mulSpectrums&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;F_I&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;F_T&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;F_TI&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="bp"&gt;true&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Compute&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;the&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;inverse&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Fourier&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;transform&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;of&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;the&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cross&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;correlation&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;dismissing&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;those&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;rows&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ow"&gt;and&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;columns&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;of&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;the&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cross&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;correlation&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;matrix&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;that&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;would&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;require&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;the&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;template&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;to&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;roll over&amp;quot;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;the&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;image&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Size&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;clipped&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;clipped&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;width&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;cols&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;cols&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;clipped&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;height&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;rows&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;rows&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;F_inv&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;F_TI&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;clipped&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;W&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;CV_64F&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ONE&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Point3f&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;matchTemplate&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Compute&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;the&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;optimal&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;DFT&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;computing&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Size&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;fit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="p"&gt;());&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="n"&gt;Compute&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;the&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cross&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;correlation&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ow"&gt;and&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;normalizing&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;matrix&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;C_TI&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;C&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;M_I&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;C&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;W&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;mul&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;size&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="nb nb-Type"&gt;int&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;i_s&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;j_s&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="nb nb-Type"&gt;float&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="nb nb-Type"&gt;int&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;rows&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;C_TI&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;rows&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="nb nb-Type"&gt;int&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cols&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;C_TI&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;cols&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb nb-Type"&gt;int&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;rows&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="o"&gt;++&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb nb-Type"&gt;int&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;j&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;j&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cols&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;j&lt;/span&gt;&lt;span class="o"&gt;++&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="nb nb-Type"&gt;float&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;v&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;C_TI&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;at&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;double&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;j&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;sqrt&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;M_I&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;at&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;double&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;j&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;v&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;v&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="n"&gt;i_s&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="n"&gt;j_s&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;j&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Point3f&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;j_s&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;i_s&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;r&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;L&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;L_I&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;L_F&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;cvtColor&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;L_I&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;CV_BGR2GRAY&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;L_I&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;convertTo&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;L_F&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;CV_64F&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;L_F&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="nb nb-Type"&gt;int&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;main&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb nb-Type"&gt;int&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;argc&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;char&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;argv&lt;/span&gt;&lt;span class="p"&gt;[])&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;imread&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;argv&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Mat&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;imread&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;argv&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;]);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Point3f&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;match&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;matchTemplate&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;L&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;L&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;rectangle&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;Rect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;match&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;match&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;cols&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;rows&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;WHITE&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;imshow&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Template&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;T&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;imshow&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Image&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;cv&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;waitKey&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;script type="text/javascript"&gt;if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width &lt; 768) ? "left" : align;
+        indent = (screen.width &lt; 768) ? "0em" : indent;
+        linebreak = (screen.width &lt; 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/latest.js?config=TeX-AMS-MML_HTMLorMML';
+
+    var configscript = document.createElement('script');
+    configscript.type = 'text/x-mathjax-config';
+    configscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        availableFonts: ['STIX', 'TeX']," +
+        "        preferredFont: 'STIX'," +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(configscript);
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+&lt;/script&gt;</content><category term="Code"></category><category term="Computer Vision"></category></entry><entry><title>Controlling a differential drive robot in Gazebo from ROS</title><link href="https://xperroni.me/controlling-a-differential-drive-robot-in-gazebo-from-ros.html" rel="alternate"></link><published>2015-05-21T21:12:00-04:00</published><updated>2015-05-21T21:12:00-04:00</updated><author><name>Helio Perroni Filho</name></author><id>tag:xperroni.me,2015-05-21:/controlling-a-differential-drive-robot-in-gazebo-from-ros.html</id><summary type="html">&lt;p&gt;How to control a pure SDF Gazebo robot using ROS.&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;a href="http://gazebosim.org/"&gt;Gazebo&lt;/a&gt; is a simulation suite targeted at robotics projects, used by DARPA to implement the virtual part of its &lt;a href="http://spectrum.ieee.org/automaton/robotics/robotics-software/osrf-prepares-for-darpa-virtual-robotics-challenge"&gt;Robotics Challenge&lt;/a&gt;. It's a great companion to the &lt;a href="http://www.ros.org/"&gt;Robot Operating System&lt;/a&gt;, supporting &lt;a href="http://gazebosim.org/tutorials?cat=connect_ros"&gt;several ways&lt;/a&gt; to interface with it.&lt;/p&gt;
+&lt;p&gt;One recurrent question regarding Gazebo is how to control robots described in &lt;a href="http://sdformat.org/"&gt;Simulation Description Format (SDF)&lt;/a&gt; models from ROS. The more involved case of &lt;a href="http://gazebosim.org/tutorials?tut=ros_urdf&amp;amp;cat=connect_ros"&gt;porting a URDF model to Gazebo&lt;/a&gt; and &lt;a href="http://gazebosim.org/tutorials?tut=ros_control&amp;amp;cat=connect_ros"&gt;manipulating it through ROS Control&lt;/a&gt; interfaces is well documented, but what about a robot that already has a full SDF model available? Isn't it possible to just paste it into a Gazebo workspace and get some ROS topics to manipulate it?&lt;/p&gt;
+&lt;p&gt;The tutorial below covers this simpler case. It is based on the SDF model for the &lt;a href="http://www-lar.deis.unibo.it/equipments/p2dx/"&gt;Pioneer 2DX&lt;/a&gt; differential drive robot, which is available from Gazebo's default library. It also assumes ROS and Gazebo are already installed, as well as the necessary &lt;a href="http://gazebosim.org/tutorials?tut=ros_installing&amp;amp;cat=connect_ros"&gt;integration packages&lt;/a&gt; and &lt;a href="http://gazebosim.org/tutorials?tut=ros_gzplugins&amp;amp;cat=connect_ros"&gt;plugins&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;First, save the SDF world model below to your local filesystem as &lt;code&gt;pioneer2dx_ros.world&lt;/code&gt;:&lt;/p&gt;
+&lt;table class="highlighttable"&gt;&lt;tr&gt;&lt;td class="linenos"&gt;&lt;div class="linenodiv"&gt;&lt;pre&gt;&lt;span class="normal"&gt;  1&lt;/span&gt;
+&lt;span class="normal"&gt;  2&lt;/span&gt;
+&lt;span class="normal"&gt;  3&lt;/span&gt;
+&lt;span class="normal"&gt;  4&lt;/span&gt;
+&lt;span class="normal"&gt;  5&lt;/span&gt;
+&lt;span class="normal"&gt;  6&lt;/span&gt;
+&lt;span class="normal"&gt;  7&lt;/span&gt;
+&lt;span class="normal"&gt;  8&lt;/span&gt;
+&lt;span class="normal"&gt;  9&lt;/span&gt;
+&lt;span class="normal"&gt; 10&lt;/span&gt;
+&lt;span class="normal"&gt; 11&lt;/span&gt;
+&lt;span class="normal"&gt; 12&lt;/span&gt;
+&lt;span class="normal"&gt; 13&lt;/span&gt;
+&lt;span class="normal"&gt; 14&lt;/span&gt;
+&lt;span class="normal"&gt; 15&lt;/span&gt;
+&lt;span class="normal"&gt; 16&lt;/span&gt;
+&lt;span class="normal"&gt; 17&lt;/span&gt;
+&lt;span class="normal"&gt; 18&lt;/span&gt;
+&lt;span class="normal"&gt; 19&lt;/span&gt;
+&lt;span class="normal"&gt; 20&lt;/span&gt;
+&lt;span class="normal"&gt; 21&lt;/span&gt;
+&lt;span class="normal"&gt; 22&lt;/span&gt;
+&lt;span class="normal"&gt; 23&lt;/span&gt;
+&lt;span class="normal"&gt; 24&lt;/span&gt;
+&lt;span class="normal"&gt; 25&lt;/span&gt;
+&lt;span class="normal"&gt; 26&lt;/span&gt;
+&lt;span class="normal"&gt; 27&lt;/span&gt;
+&lt;span class="normal"&gt; 28&lt;/span&gt;
+&lt;span class="normal"&gt; 29&lt;/span&gt;
+&lt;span class="normal"&gt; 30&lt;/span&gt;
+&lt;span class="normal"&gt; 31&lt;/span&gt;
+&lt;span class="normal"&gt; 32&lt;/span&gt;
+&lt;span class="normal"&gt; 33&lt;/span&gt;
+&lt;span class="normal"&gt; 34&lt;/span&gt;
+&lt;span class="normal"&gt; 35&lt;/span&gt;
+&lt;span class="normal"&gt; 36&lt;/span&gt;
+&lt;span class="normal"&gt; 37&lt;/span&gt;
+&lt;span class="normal"&gt; 38&lt;/span&gt;
+&lt;span class="normal"&gt; 39&lt;/span&gt;
+&lt;span class="normal"&gt; 40&lt;/span&gt;
+&lt;span class="normal"&gt; 41&lt;/span&gt;
+&lt;span class="normal"&gt; 42&lt;/span&gt;
+&lt;span class="normal"&gt; 43&lt;/span&gt;
+&lt;span class="normal"&gt; 44&lt;/span&gt;
+&lt;span class="normal"&gt; 45&lt;/span&gt;
+&lt;span class="normal"&gt; 46&lt;/span&gt;
+&lt;span class="normal"&gt; 47&lt;/span&gt;
+&lt;span class="normal"&gt; 48&lt;/span&gt;
+&lt;span class="normal"&gt; 49&lt;/span&gt;
+&lt;span class="normal"&gt; 50&lt;/span&gt;
+&lt;span class="normal"&gt; 51&lt;/span&gt;
+&lt;span class="normal"&gt; 52&lt;/span&gt;
+&lt;span class="normal"&gt; 53&lt;/span&gt;
+&lt;span class="normal"&gt; 54&lt;/span&gt;
+&lt;span class="normal"&gt; 55&lt;/span&gt;
+&lt;span class="normal"&gt; 56&lt;/span&gt;
+&lt;span class="normal"&gt; 57&lt;/span&gt;
+&lt;span class="normal"&gt; 58&lt;/span&gt;
+&lt;span class="normal"&gt; 59&lt;/span&gt;
+&lt;span class="normal"&gt; 60&lt;/span&gt;
+&lt;span class="normal"&gt; 61&lt;/span&gt;
+&lt;span class="normal"&gt; 62&lt;/span&gt;
+&lt;span class="normal"&gt; 63&lt;/span&gt;
+&lt;span class="normal"&gt; 64&lt;/span&gt;
+&lt;span class="normal"&gt; 65&lt;/span&gt;
+&lt;span class="normal"&gt; 66&lt;/span&gt;
+&lt;span class="normal"&gt; 67&lt;/span&gt;
+&lt;span class="normal"&gt; 68&lt;/span&gt;
+&lt;span class="normal"&gt; 69&lt;/span&gt;
+&lt;span class="normal"&gt; 70&lt;/span&gt;
+&lt;span class="normal"&gt; 71&lt;/span&gt;
+&lt;span class="normal"&gt; 72&lt;/span&gt;
+&lt;span class="normal"&gt; 73&lt;/span&gt;
+&lt;span class="normal"&gt; 74&lt;/span&gt;
+&lt;span class="normal"&gt; 75&lt;/span&gt;
+&lt;span class="normal"&gt; 76&lt;/span&gt;
+&lt;span class="normal"&gt; 77&lt;/span&gt;
+&lt;span class="normal"&gt; 78&lt;/span&gt;
+&lt;span class="normal"&gt; 79&lt;/span&gt;
+&lt;span class="normal"&gt; 80&lt;/span&gt;
+&lt;span class="normal"&gt; 81&lt;/span&gt;
+&lt;span class="normal"&gt; 82&lt;/span&gt;
+&lt;span class="normal"&gt; 83&lt;/span&gt;
+&lt;span class="normal"&gt; 84&lt;/span&gt;
+&lt;span class="normal"&gt; 85&lt;/span&gt;
+&lt;span class="normal"&gt; 86&lt;/span&gt;
+&lt;span class="normal"&gt; 87&lt;/span&gt;
+&lt;span class="normal"&gt; 88&lt;/span&gt;
+&lt;span class="normal"&gt; 89&lt;/span&gt;
+&lt;span class="normal"&gt; 90&lt;/span&gt;
+&lt;span class="normal"&gt; 91&lt;/span&gt;
+&lt;span class="normal"&gt; 92&lt;/span&gt;
+&lt;span class="normal"&gt; 93&lt;/span&gt;
+&lt;span class="normal"&gt; 94&lt;/span&gt;
+&lt;span class="normal"&gt; 95&lt;/span&gt;
+&lt;span class="normal"&gt; 96&lt;/span&gt;
+&lt;span class="normal"&gt; 97&lt;/span&gt;
+&lt;span class="normal"&gt; 98&lt;/span&gt;
+&lt;span class="normal"&gt; 99&lt;/span&gt;
+&lt;span class="normal"&gt;100&lt;/span&gt;
+&lt;span class="normal"&gt;101&lt;/span&gt;
+&lt;span class="normal"&gt;102&lt;/span&gt;
+&lt;span class="normal"&gt;103&lt;/span&gt;
+&lt;span class="normal"&gt;104&lt;/span&gt;
+&lt;span class="normal"&gt;105&lt;/span&gt;
+&lt;span class="normal"&gt;106&lt;/span&gt;
+&lt;span class="normal"&gt;107&lt;/span&gt;
+&lt;span class="normal"&gt;108&lt;/span&gt;
+&lt;span class="normal"&gt;109&lt;/span&gt;
+&lt;span class="normal"&gt;110&lt;/span&gt;
+&lt;span class="normal"&gt;111&lt;/span&gt;
+&lt;span class="normal"&gt;112&lt;/span&gt;
+&lt;span class="normal"&gt;113&lt;/span&gt;
+&lt;span class="normal"&gt;114&lt;/span&gt;
+&lt;span class="normal"&gt;115&lt;/span&gt;
+&lt;span class="normal"&gt;116&lt;/span&gt;
+&lt;span class="normal"&gt;117&lt;/span&gt;
+&lt;span class="normal"&gt;118&lt;/span&gt;
+&lt;span class="normal"&gt;119&lt;/span&gt;
+&lt;span class="normal"&gt;120&lt;/span&gt;
+&lt;span class="normal"&gt;121&lt;/span&gt;
+&lt;span class="normal"&gt;122&lt;/span&gt;
+&lt;span class="normal"&gt;123&lt;/span&gt;
+&lt;span class="normal"&gt;124&lt;/span&gt;
+&lt;span class="normal"&gt;125&lt;/span&gt;
+&lt;span class="normal"&gt;126&lt;/span&gt;
+&lt;span class="normal"&gt;127&lt;/span&gt;
+&lt;span class="normal"&gt;128&lt;/span&gt;
+&lt;span class="normal"&gt;129&lt;/span&gt;
+&lt;span class="normal"&gt;130&lt;/span&gt;
+&lt;span class="normal"&gt;131&lt;/span&gt;
+&lt;span class="normal"&gt;132&lt;/span&gt;
+&lt;span class="normal"&gt;133&lt;/span&gt;
+&lt;span class="normal"&gt;134&lt;/span&gt;
+&lt;span class="normal"&gt;135&lt;/span&gt;
+&lt;span class="normal"&gt;136&lt;/span&gt;
+&lt;span class="normal"&gt;137&lt;/span&gt;
+&lt;span class="normal"&gt;138&lt;/span&gt;
+&lt;span class="normal"&gt;139&lt;/span&gt;
+&lt;span class="normal"&gt;140&lt;/span&gt;
+&lt;span class="normal"&gt;141&lt;/span&gt;
+&lt;span class="normal"&gt;142&lt;/span&gt;
+&lt;span class="normal"&gt;143&lt;/span&gt;
+&lt;span class="normal"&gt;144&lt;/span&gt;
+&lt;span class="normal"&gt;145&lt;/span&gt;
+&lt;span class="normal"&gt;146&lt;/span&gt;
+&lt;span class="normal"&gt;147&lt;/span&gt;
+&lt;span class="normal"&gt;148&lt;/span&gt;
+&lt;span class="normal"&gt;149&lt;/span&gt;
+&lt;span class="normal"&gt;150&lt;/span&gt;
+&lt;span class="normal"&gt;151&lt;/span&gt;
+&lt;span class="normal"&gt;152&lt;/span&gt;
+&lt;span class="normal"&gt;153&lt;/span&gt;
+&lt;span class="normal"&gt;154&lt;/span&gt;
+&lt;span class="normal"&gt;155&lt;/span&gt;
+&lt;span class="normal"&gt;156&lt;/span&gt;
+&lt;span class="normal"&gt;157&lt;/span&gt;
+&lt;span class="normal"&gt;158&lt;/span&gt;
+&lt;span class="normal"&gt;159&lt;/span&gt;
+&lt;span class="normal"&gt;160&lt;/span&gt;
+&lt;span class="normal"&gt;161&lt;/span&gt;
+&lt;span class="normal"&gt;162&lt;/span&gt;
+&lt;span class="normal"&gt;163&lt;/span&gt;
+&lt;span class="normal"&gt;164&lt;/span&gt;
+&lt;span class="normal"&gt;165&lt;/span&gt;
+&lt;span class="normal"&gt;166&lt;/span&gt;
+&lt;span class="normal"&gt;167&lt;/span&gt;
+&lt;span class="normal"&gt;168&lt;/span&gt;
+&lt;span class="normal"&gt;169&lt;/span&gt;
+&lt;span class="normal"&gt;170&lt;/span&gt;
+&lt;span class="normal"&gt;171&lt;/span&gt;
+&lt;span class="normal"&gt;172&lt;/span&gt;
+&lt;span class="normal"&gt;173&lt;/span&gt;
+&lt;span class="normal"&gt;174&lt;/span&gt;
+&lt;span class="normal"&gt;175&lt;/span&gt;
+&lt;span class="normal"&gt;176&lt;/span&gt;
+&lt;span class="normal"&gt;177&lt;/span&gt;
+&lt;span class="normal"&gt;178&lt;/span&gt;
+&lt;span class="normal"&gt;179&lt;/span&gt;
+&lt;span class="normal"&gt;180&lt;/span&gt;
+&lt;span class="normal"&gt;181&lt;/span&gt;
+&lt;span class="normal"&gt;182&lt;/span&gt;
+&lt;span class="normal"&gt;183&lt;/span&gt;
+&lt;span class="normal"&gt;184&lt;/span&gt;
+&lt;span class="normal"&gt;185&lt;/span&gt;
+&lt;span class="normal"&gt;186&lt;/span&gt;
+&lt;span class="normal"&gt;187&lt;/span&gt;
+&lt;span class="normal"&gt;188&lt;/span&gt;
+&lt;span class="normal"&gt;189&lt;/span&gt;
+&lt;span class="normal"&gt;190&lt;/span&gt;
+&lt;span class="normal"&gt;191&lt;/span&gt;
+&lt;span class="normal"&gt;192&lt;/span&gt;
+&lt;span class="normal"&gt;193&lt;/span&gt;
+&lt;span class="normal"&gt;194&lt;/span&gt;
+&lt;span class="normal"&gt;195&lt;/span&gt;
+&lt;span class="normal"&gt;196&lt;/span&gt;
+&lt;span class="normal"&gt;197&lt;/span&gt;
+&lt;span class="normal"&gt;198&lt;/span&gt;
+&lt;span class="normal"&gt;199&lt;/span&gt;
+&lt;span class="normal"&gt;200&lt;/span&gt;
+&lt;span class="normal"&gt;201&lt;/span&gt;
+&lt;span class="normal"&gt;202&lt;/span&gt;
+&lt;span class="normal"&gt;203&lt;/span&gt;
+&lt;span class="normal"&gt;204&lt;/span&gt;
+&lt;span class="normal"&gt;205&lt;/span&gt;
+&lt;span class="normal"&gt;206&lt;/span&gt;
+&lt;span class="normal"&gt;207&lt;/span&gt;
+&lt;span class="normal"&gt;208&lt;/span&gt;
+&lt;span class="normal"&gt;209&lt;/span&gt;
+&lt;span class="normal"&gt;210&lt;/span&gt;
+&lt;span class="normal"&gt;211&lt;/span&gt;
+&lt;span class="normal"&gt;212&lt;/span&gt;
+&lt;span class="normal"&gt;213&lt;/span&gt;
+&lt;span class="normal"&gt;214&lt;/span&gt;
+&lt;span class="normal"&gt;215&lt;/span&gt;
+&lt;span class="normal"&gt;216&lt;/span&gt;
+&lt;span class="normal"&gt;217&lt;/span&gt;
+&lt;span class="normal"&gt;218&lt;/span&gt;
+&lt;span class="normal"&gt;219&lt;/span&gt;
+&lt;span class="normal"&gt;220&lt;/span&gt;
+&lt;span class="normal"&gt;221&lt;/span&gt;
+&lt;span class="normal"&gt;222&lt;/span&gt;
+&lt;span class="normal"&gt;223&lt;/span&gt;
+&lt;span class="normal"&gt;224&lt;/span&gt;
+&lt;span class="normal"&gt;225&lt;/span&gt;
+&lt;span class="normal"&gt;226&lt;/span&gt;
+&lt;span class="normal"&gt;227&lt;/span&gt;
+&lt;span class="normal"&gt;228&lt;/span&gt;
+&lt;span class="normal"&gt;229&lt;/span&gt;
+&lt;span class="normal"&gt;230&lt;/span&gt;
+&lt;span class="normal"&gt;231&lt;/span&gt;
+&lt;span class="normal"&gt;232&lt;/span&gt;
+&lt;span class="normal"&gt;233&lt;/span&gt;
+&lt;span class="normal"&gt;234&lt;/span&gt;
+&lt;span class="normal"&gt;235&lt;/span&gt;
+&lt;span class="normal"&gt;236&lt;/span&gt;
+&lt;span class="normal"&gt;237&lt;/span&gt;
+&lt;span class="normal"&gt;238&lt;/span&gt;
+&lt;span class="normal"&gt;239&lt;/span&gt;
+&lt;span class="normal"&gt;240&lt;/span&gt;
+&lt;span class="normal"&gt;241&lt;/span&gt;
+&lt;span class="normal"&gt;242&lt;/span&gt;
+&lt;span class="normal"&gt;243&lt;/span&gt;
+&lt;span class="normal"&gt;244&lt;/span&gt;
+&lt;span class="normal"&gt;245&lt;/span&gt;
+&lt;span class="normal"&gt;246&lt;/span&gt;
+&lt;span class="normal"&gt;247&lt;/span&gt;
+&lt;span class="normal"&gt;248&lt;/span&gt;
+&lt;span class="normal"&gt;249&lt;/span&gt;
+&lt;span class="normal"&gt;250&lt;/span&gt;
+&lt;span class="normal"&gt;251&lt;/span&gt;
+&lt;span class="normal"&gt;252&lt;/span&gt;
+&lt;span class="normal"&gt;253&lt;/span&gt;
+&lt;span class="normal"&gt;254&lt;/span&gt;
+&lt;span class="normal"&gt;255&lt;/span&gt;
+&lt;span class="normal"&gt;256&lt;/span&gt;
+&lt;span class="normal"&gt;257&lt;/span&gt;
+&lt;span class="normal"&gt;258&lt;/span&gt;
+&lt;span class="normal"&gt;259&lt;/span&gt;
+&lt;span class="normal"&gt;260&lt;/span&gt;
+&lt;span class="normal"&gt;261&lt;/span&gt;
+&lt;span class="normal"&gt;262&lt;/span&gt;
+&lt;span class="normal"&gt;263&lt;/span&gt;
+&lt;span class="normal"&gt;264&lt;/span&gt;
+&lt;span class="normal"&gt;265&lt;/span&gt;
+&lt;span class="normal"&gt;266&lt;/span&gt;
+&lt;span class="normal"&gt;267&lt;/span&gt;
+&lt;span class="normal"&gt;268&lt;/span&gt;
+&lt;span class="normal"&gt;269&lt;/span&gt;
+&lt;span class="normal"&gt;270&lt;/span&gt;
+&lt;span class="normal"&gt;271&lt;/span&gt;
+&lt;span class="normal"&gt;272&lt;/span&gt;
+&lt;span class="normal"&gt;273&lt;/span&gt;
+&lt;span class="normal"&gt;274&lt;/span&gt;
+&lt;span class="normal"&gt;275&lt;/span&gt;
+&lt;span class="normal"&gt;276&lt;/span&gt;
+&lt;span class="normal"&gt;277&lt;/span&gt;
+&lt;span class="normal"&gt;278&lt;/span&gt;
+&lt;span class="normal"&gt;279&lt;/span&gt;
+&lt;span class="normal"&gt;280&lt;/span&gt;
+&lt;span class="normal"&gt;281&lt;/span&gt;
+&lt;span class="normal"&gt;282&lt;/span&gt;
+&lt;span class="normal"&gt;283&lt;/span&gt;
+&lt;span class="normal"&gt;284&lt;/span&gt;
+&lt;span class="normal"&gt;285&lt;/span&gt;
+&lt;span class="normal"&gt;286&lt;/span&gt;
+&lt;span class="normal"&gt;287&lt;/span&gt;
+&lt;span class="normal"&gt;288&lt;/span&gt;
+&lt;span class="normal"&gt;289&lt;/span&gt;
+&lt;span class="normal"&gt;290&lt;/span&gt;
+&lt;span class="normal"&gt;291&lt;/span&gt;
+&lt;span class="normal"&gt;292&lt;/span&gt;
+&lt;span class="normal"&gt;293&lt;/span&gt;
+&lt;span class="normal"&gt;294&lt;/span&gt;
+&lt;span class="normal"&gt;295&lt;/span&gt;
+&lt;span class="normal"&gt;296&lt;/span&gt;
+&lt;span class="normal"&gt;297&lt;/span&gt;
+&lt;span class="normal"&gt;298&lt;/span&gt;
+&lt;span class="normal"&gt;299&lt;/span&gt;
+&lt;span class="normal"&gt;300&lt;/span&gt;
+&lt;span class="normal"&gt;301&lt;/span&gt;
+&lt;span class="normal"&gt;302&lt;/span&gt;
+&lt;span class="normal"&gt;303&lt;/span&gt;
+&lt;span class="normal"&gt;304&lt;/span&gt;
+&lt;span class="normal"&gt;305&lt;/span&gt;
+&lt;span class="normal"&gt;306&lt;/span&gt;
+&lt;span class="normal"&gt;307&lt;/span&gt;
+&lt;span class="normal"&gt;308&lt;/span&gt;
+&lt;span class="normal"&gt;309&lt;/span&gt;
+&lt;span class="normal"&gt;310&lt;/span&gt;
+&lt;span class="normal"&gt;311&lt;/span&gt;
+&lt;span class="normal"&gt;312&lt;/span&gt;
+&lt;span class="normal"&gt;313&lt;/span&gt;
+&lt;span class="normal"&gt;314&lt;/span&gt;
+&lt;span class="normal"&gt;315&lt;/span&gt;
+&lt;span class="normal"&gt;316&lt;/span&gt;
+&lt;span class="normal"&gt;317&lt;/span&gt;
+&lt;span class="normal"&gt;318&lt;/span&gt;
+&lt;span class="normal"&gt;319&lt;/span&gt;
+&lt;span class="normal"&gt;320&lt;/span&gt;
+&lt;span class="normal"&gt;321&lt;/span&gt;
+&lt;span class="normal"&gt;322&lt;/span&gt;
+&lt;span class="normal"&gt;323&lt;/span&gt;
+&lt;span class="normal"&gt;324&lt;/span&gt;
+&lt;span class="normal"&gt;325&lt;/span&gt;
+&lt;span class="normal"&gt;326&lt;/span&gt;
+&lt;span class="normal"&gt;327&lt;/span&gt;
+&lt;span class="normal"&gt;328&lt;/span&gt;
+&lt;span class="normal"&gt;329&lt;/span&gt;
+&lt;span class="normal"&gt;330&lt;/span&gt;
+&lt;span class="normal"&gt;331&lt;/span&gt;
+&lt;span class="normal"&gt;332&lt;/span&gt;
+&lt;span class="normal"&gt;333&lt;/span&gt;
+&lt;span class="normal"&gt;334&lt;/span&gt;
+&lt;span class="normal"&gt;335&lt;/span&gt;
+&lt;span class="normal"&gt;336&lt;/span&gt;
+&lt;span class="normal"&gt;337&lt;/span&gt;
+&lt;span class="normal"&gt;338&lt;/span&gt;
+&lt;span class="normal"&gt;339&lt;/span&gt;
+&lt;span class="normal"&gt;340&lt;/span&gt;
+&lt;span class="normal"&gt;341&lt;/span&gt;
+&lt;span class="normal"&gt;342&lt;/span&gt;
+&lt;span class="normal"&gt;343&lt;/span&gt;
+&lt;span class="normal"&gt;344&lt;/span&gt;
+&lt;span class="normal"&gt;345&lt;/span&gt;
+&lt;span class="normal"&gt;346&lt;/span&gt;
+&lt;span class="normal"&gt;347&lt;/span&gt;
+&lt;span class="normal"&gt;348&lt;/span&gt;
+&lt;span class="normal"&gt;349&lt;/span&gt;
+&lt;span class="normal"&gt;350&lt;/span&gt;
+&lt;span class="normal"&gt;351&lt;/span&gt;
+&lt;span class="normal"&gt;352&lt;/span&gt;
+&lt;span class="normal"&gt;353&lt;/span&gt;
+&lt;span class="normal"&gt;354&lt;/span&gt;
+&lt;span class="normal"&gt;355&lt;/span&gt;
+&lt;span class="normal"&gt;356&lt;/span&gt;
+&lt;span class="normal"&gt;357&lt;/span&gt;
+&lt;span class="normal"&gt;358&lt;/span&gt;
+&lt;span class="normal"&gt;359&lt;/span&gt;
+&lt;span class="normal"&gt;360&lt;/span&gt;
+&lt;span class="normal"&gt;361&lt;/span&gt;
+&lt;span class="normal"&gt;362&lt;/span&gt;
+&lt;span class="normal"&gt;363&lt;/span&gt;
+&lt;span class="normal"&gt;364&lt;/span&gt;
+&lt;span class="normal"&gt;365&lt;/span&gt;
+&lt;span class="normal"&gt;366&lt;/span&gt;
+&lt;span class="normal"&gt;367&lt;/span&gt;
+&lt;span class="normal"&gt;368&lt;/span&gt;
+&lt;span class="normal"&gt;369&lt;/span&gt;
+&lt;span class="normal"&gt;370&lt;/span&gt;
+&lt;span class="normal"&gt;371&lt;/span&gt;
+&lt;span class="normal"&gt;372&lt;/span&gt;
+&lt;span class="normal"&gt;373&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/td&gt;&lt;td class="code"&gt;&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="cp"&gt;&amp;lt;?xml version=&amp;quot;1.0&amp;quot; ?&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;sdf&lt;/span&gt; &lt;span class="na"&gt;version=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;1.4&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+  &lt;span class="nt"&gt;&amp;lt;world&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;default&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;light&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;sun&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;type=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;directional&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;cast_shadows&amp;gt;&lt;/span&gt;1&lt;span class="nt"&gt;&amp;lt;/cast_shadows&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;pose&amp;gt;&lt;/span&gt;0 0 10 0 -0 0&lt;span class="nt"&gt;&amp;lt;/pose&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;diffuse&amp;gt;&lt;/span&gt;0.8 0.8 0.8 1&lt;span class="nt"&gt;&amp;lt;/diffuse&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;specular&amp;gt;&lt;/span&gt;0.2 0.2 0.2 1&lt;span class="nt"&gt;&amp;lt;/specular&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;attenuation&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;range&amp;gt;&lt;/span&gt;1000&lt;span class="nt"&gt;&amp;lt;/range&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;constant&amp;gt;&lt;/span&gt;0.9&lt;span class="nt"&gt;&amp;lt;/constant&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;linear&amp;gt;&lt;/span&gt;0.01&lt;span class="nt"&gt;&amp;lt;/linear&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;quadratic&amp;gt;&lt;/span&gt;0.001&lt;span class="nt"&gt;&amp;lt;/quadratic&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;/attenuation&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;direction&amp;gt;&lt;/span&gt;-0.5 0.1 -0.9&lt;span class="nt"&gt;&amp;lt;/direction&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;/light&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;model&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;ground_plane&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;static&amp;gt;&lt;/span&gt;1&lt;span class="nt"&gt;&amp;lt;/static&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;link&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;link&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;collision&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;collision&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;geometry&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;plane&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;normal&amp;gt;&lt;/span&gt;0 0 1&lt;span class="nt"&gt;&amp;lt;/normal&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;size&amp;gt;&lt;/span&gt;100 100&lt;span class="nt"&gt;&amp;lt;/size&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/plane&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;/geometry&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;surface&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;friction&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;ode&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;mu&amp;gt;&lt;/span&gt;100&lt;span class="nt"&gt;&amp;lt;/mu&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;mu2&amp;gt;&lt;/span&gt;50&lt;span class="nt"&gt;&amp;lt;/mu2&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;/ode&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/friction&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;bounce/&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;contact&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;ode/&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/contact&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;/surface&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;max_contacts&amp;gt;&lt;/span&gt;10&lt;span class="nt"&gt;&amp;lt;/max_contacts&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/collision&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;visual&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;visual&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;cast_shadows&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/cast_shadows&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;geometry&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;plane&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;normal&amp;gt;&lt;/span&gt;0 0 1&lt;span class="nt"&gt;&amp;lt;/normal&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;size&amp;gt;&lt;/span&gt;100 100&lt;span class="nt"&gt;&amp;lt;/size&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/plane&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;/geometry&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;material&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;script&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;uri&amp;gt;&lt;/span&gt;file://media/materials/scripts/gazebo.material&lt;span class="nt"&gt;&amp;lt;/uri&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;name&amp;gt;&lt;/span&gt;Gazebo/Grey&lt;span class="nt"&gt;&amp;lt;/name&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;/material&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/visual&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;velocity_decay&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;linear&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/linear&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;angular&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/angular&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/velocity_decay&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;self_collide&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/self_collide&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;kinematic&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/kinematic&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;gravity&amp;gt;&lt;/span&gt;1&lt;span class="nt"&gt;&amp;lt;/gravity&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;/link&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;/model&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;physics&lt;/span&gt; &lt;span class="na"&gt;type=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;ode&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;max_step_size&amp;gt;&lt;/span&gt;0.001&lt;span class="nt"&gt;&amp;lt;/max_step_size&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;real_time_factor&amp;gt;&lt;/span&gt;1&lt;span class="nt"&gt;&amp;lt;/real_time_factor&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;real_time_update_rate&amp;gt;&lt;/span&gt;1000&lt;span class="nt"&gt;&amp;lt;/real_time_update_rate&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;gravity&amp;gt;&lt;/span&gt;0 0 -9.8&lt;span class="nt"&gt;&amp;lt;/gravity&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;/physics&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;scene&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;ambient&amp;gt;&lt;/span&gt;0.4 0.4 0.4 1&lt;span class="nt"&gt;&amp;lt;/ambient&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;background&amp;gt;&lt;/span&gt;0.7 0.7 0.7 1&lt;span class="nt"&gt;&amp;lt;/background&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;shadows&amp;gt;&lt;/span&gt;1&lt;span class="nt"&gt;&amp;lt;/shadows&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;/scene&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;spherical_coordinates&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;surface_model&amp;gt;&lt;/span&gt;EARTH_WGS84&lt;span class="nt"&gt;&amp;lt;/surface_model&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;latitude_deg&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/latitude_deg&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;longitude_deg&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/longitude_deg&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;elevation&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/elevation&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;heading_deg&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/heading_deg&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;/spherical_coordinates&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;model&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;pioneer2dx&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;link&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;chassis&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;pose&amp;gt;&lt;/span&gt;0 0 0.16 0 -0 0&lt;span class="nt"&gt;&amp;lt;/pose&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;inertial&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;mass&amp;gt;&lt;/span&gt;5.67&lt;span class="nt"&gt;&amp;lt;/mass&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;inertia&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;ixx&amp;gt;&lt;/span&gt;0.07&lt;span class="nt"&gt;&amp;lt;/ixx&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;iyy&amp;gt;&lt;/span&gt;0.08&lt;span class="nt"&gt;&amp;lt;/iyy&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;izz&amp;gt;&lt;/span&gt;0.1&lt;span class="nt"&gt;&amp;lt;/izz&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;ixy&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/ixy&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;ixz&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/ixz&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;iyz&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/iyz&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;/inertia&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/inertial&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;collision&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;collision&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;geometry&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;box&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;size&amp;gt;&lt;/span&gt;0.445 0.277 0.17&lt;span class="nt"&gt;&amp;lt;/size&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/box&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;/geometry&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;max_contacts&amp;gt;&lt;/span&gt;10&lt;span class="nt"&gt;&amp;lt;/max_contacts&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;surface&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;bounce/&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;friction&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;ode/&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/friction&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;contact&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;ode/&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/contact&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;/surface&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/collision&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;collision&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;castor_collision&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;pose&amp;gt;&lt;/span&gt;-0.2 0 -0.12 0 -0 0&lt;span class="nt"&gt;&amp;lt;/pose&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;geometry&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;sphere&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;radius&amp;gt;&lt;/span&gt;0.04&lt;span class="nt"&gt;&amp;lt;/radius&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/sphere&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;/geometry&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;surface&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;friction&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;ode&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;mu&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/mu&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;mu2&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/mu2&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;slip1&amp;gt;&lt;/span&gt;1&lt;span class="nt"&gt;&amp;lt;/slip1&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;slip2&amp;gt;&lt;/span&gt;1&lt;span class="nt"&gt;&amp;lt;/slip2&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;/ode&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/friction&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;bounce/&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;contact&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;ode/&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/contact&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;/surface&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;max_contacts&amp;gt;&lt;/span&gt;10&lt;span class="nt"&gt;&amp;lt;/max_contacts&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/collision&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;visual&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;visual&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;pose&amp;gt;&lt;/span&gt;0 0 0.04 0 -0 0&lt;span class="nt"&gt;&amp;lt;/pose&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;geometry&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;mesh&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;uri&amp;gt;&lt;/span&gt;model://pioneer2dx/meshes/chassis.dae&lt;span class="nt"&gt;&amp;lt;/uri&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/mesh&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;/geometry&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/visual&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;visual&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;castor_visual&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;pose&amp;gt;&lt;/span&gt;-0.2 0 -0.12 0 -0 0&lt;span class="nt"&gt;&amp;lt;/pose&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;geometry&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;sphere&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;radius&amp;gt;&lt;/span&gt;0.04&lt;span class="nt"&gt;&amp;lt;/radius&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/sphere&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;/geometry&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;material&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;script&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;uri&amp;gt;&lt;/span&gt;file://media/materials/scripts/gazebo.material&lt;span class="nt"&gt;&amp;lt;/uri&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;name&amp;gt;&lt;/span&gt;Gazebo/FlatBlack&lt;span class="nt"&gt;&amp;lt;/name&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;/material&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/visual&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;velocity_decay&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;linear&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/linear&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;angular&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/angular&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/velocity_decay&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;self_collide&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/self_collide&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;kinematic&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/kinematic&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;gravity&amp;gt;&lt;/span&gt;1&lt;span class="nt"&gt;&amp;lt;/gravity&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;/link&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;link&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;right_wheel&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;pose&amp;gt;&lt;/span&gt;0.1 -0.17 0.11 0 1.5707 1.5707&lt;span class="nt"&gt;&amp;lt;/pose&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;inertial&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;mass&amp;gt;&lt;/span&gt;1.5&lt;span class="nt"&gt;&amp;lt;/mass&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;inertia&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;ixx&amp;gt;&lt;/span&gt;0.0051&lt;span class="nt"&gt;&amp;lt;/ixx&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;iyy&amp;gt;&lt;/span&gt;0.0051&lt;span class="nt"&gt;&amp;lt;/iyy&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;izz&amp;gt;&lt;/span&gt;0.009&lt;span class="nt"&gt;&amp;lt;/izz&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;ixy&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/ixy&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;ixz&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/ixz&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;iyz&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/iyz&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;/inertia&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/inertial&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;collision&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;collision&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;geometry&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;cylinder&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;radius&amp;gt;&lt;/span&gt;0.11&lt;span class="nt"&gt;&amp;lt;/radius&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;length&amp;gt;&lt;/span&gt;0.05&lt;span class="nt"&gt;&amp;lt;/length&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/cylinder&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;/geometry&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;surface&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;friction&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;ode&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;mu&amp;gt;&lt;/span&gt;100000&lt;span class="nt"&gt;&amp;lt;/mu&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;mu2&amp;gt;&lt;/span&gt;100000&lt;span class="nt"&gt;&amp;lt;/mu2&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;slip1&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/slip1&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;slip2&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/slip2&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;/ode&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/friction&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;bounce/&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;contact&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;ode/&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/contact&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;/surface&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;max_contacts&amp;gt;&lt;/span&gt;10&lt;span class="nt"&gt;&amp;lt;/max_contacts&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/collision&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;visual&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;visual&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;geometry&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;cylinder&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;radius&amp;gt;&lt;/span&gt;0.11&lt;span class="nt"&gt;&amp;lt;/radius&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;length&amp;gt;&lt;/span&gt;0.05&lt;span class="nt"&gt;&amp;lt;/length&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/cylinder&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;/geometry&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;material&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;script&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;uri&amp;gt;&lt;/span&gt;file://media/materials/scripts/gazebo.material&lt;span class="nt"&gt;&amp;lt;/uri&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;name&amp;gt;&lt;/span&gt;Gazebo/FlatBlack&lt;span class="nt"&gt;&amp;lt;/name&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;/material&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/visual&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;velocity_decay&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;linear&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/linear&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;angular&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/angular&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/velocity_decay&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;self_collide&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/self_collide&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;kinematic&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/kinematic&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;gravity&amp;gt;&lt;/span&gt;1&lt;span class="nt"&gt;&amp;lt;/gravity&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;/link&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;link&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;left_wheel&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;pose&amp;gt;&lt;/span&gt;0.1 0.17 0.11 0 1.5707 1.5707&lt;span class="nt"&gt;&amp;lt;/pose&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;inertial&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;mass&amp;gt;&lt;/span&gt;1.5&lt;span class="nt"&gt;&amp;lt;/mass&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;inertia&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;ixx&amp;gt;&lt;/span&gt;0.0051&lt;span class="nt"&gt;&amp;lt;/ixx&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;iyy&amp;gt;&lt;/span&gt;0.0051&lt;span class="nt"&gt;&amp;lt;/iyy&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;izz&amp;gt;&lt;/span&gt;0.009&lt;span class="nt"&gt;&amp;lt;/izz&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;ixy&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/ixy&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;ixz&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/ixz&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;iyz&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/iyz&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;/inertia&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/inertial&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;collision&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;collision&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;geometry&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;cylinder&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;radius&amp;gt;&lt;/span&gt;0.11&lt;span class="nt"&gt;&amp;lt;/radius&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;length&amp;gt;&lt;/span&gt;0.05&lt;span class="nt"&gt;&amp;lt;/length&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/cylinder&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;/geometry&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;surface&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;friction&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;ode&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;mu&amp;gt;&lt;/span&gt;100000&lt;span class="nt"&gt;&amp;lt;/mu&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;mu2&amp;gt;&lt;/span&gt;100000&lt;span class="nt"&gt;&amp;lt;/mu2&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;slip1&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/slip1&amp;gt;&lt;/span&gt;
+                &lt;span class="nt"&gt;&amp;lt;slip2&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/slip2&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;/ode&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/friction&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;bounce/&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;contact&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;ode/&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/contact&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;/surface&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;max_contacts&amp;gt;&lt;/span&gt;10&lt;span class="nt"&gt;&amp;lt;/max_contacts&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/collision&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;visual&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;visual&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;geometry&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;cylinder&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;radius&amp;gt;&lt;/span&gt;0.11&lt;span class="nt"&gt;&amp;lt;/radius&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;length&amp;gt;&lt;/span&gt;0.05&lt;span class="nt"&gt;&amp;lt;/length&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/cylinder&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;/geometry&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;material&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;script&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;uri&amp;gt;&lt;/span&gt;file://media/materials/scripts/gazebo.material&lt;span class="nt"&gt;&amp;lt;/uri&amp;gt;&lt;/span&gt;
+              &lt;span class="nt"&gt;&amp;lt;name&amp;gt;&lt;/span&gt;Gazebo/FlatBlack&lt;span class="nt"&gt;&amp;lt;/name&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;/material&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/visual&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;velocity_decay&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;linear&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/linear&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;angular&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/angular&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/velocity_decay&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;self_collide&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/self_collide&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;kinematic&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/kinematic&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;gravity&amp;gt;&lt;/span&gt;1&lt;span class="nt"&gt;&amp;lt;/gravity&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;/link&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;joint&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;left_wheel_hinge&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;type=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;revolute&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;pose&amp;gt;&lt;/span&gt;0 0 -0.03 0 -0 0&lt;span class="nt"&gt;&amp;lt;/pose&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;child&amp;gt;&lt;/span&gt;left_wheel&lt;span class="nt"&gt;&amp;lt;/child&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;parent&amp;gt;&lt;/span&gt;chassis&lt;span class="nt"&gt;&amp;lt;/parent&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;axis&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;xyz&amp;gt;&lt;/span&gt;0 1 0&lt;span class="nt"&gt;&amp;lt;/xyz&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;limit&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;lower&amp;gt;&lt;/span&gt;-1e+16&lt;span class="nt"&gt;&amp;lt;/lower&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;upper&amp;gt;&lt;/span&gt;1e+16&lt;span class="nt"&gt;&amp;lt;/upper&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;/limit&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/axis&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;/joint&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;joint&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;right_wheel_hinge&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;type=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;revolute&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;pose&amp;gt;&lt;/span&gt;0 0 0.03 0 -0 0&lt;span class="nt"&gt;&amp;lt;/pose&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;child&amp;gt;&lt;/span&gt;right_wheel&lt;span class="nt"&gt;&amp;lt;/child&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;parent&amp;gt;&lt;/span&gt;chassis&lt;span class="nt"&gt;&amp;lt;/parent&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;axis&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;xyz&amp;gt;&lt;/span&gt;0 1 0&lt;span class="nt"&gt;&amp;lt;/xyz&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;limit&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;lower&amp;gt;&lt;/span&gt;-1e+16&lt;span class="nt"&gt;&amp;lt;/lower&amp;gt;&lt;/span&gt;
+            &lt;span class="nt"&gt;&amp;lt;upper&amp;gt;&lt;/span&gt;1e+16&lt;span class="nt"&gt;&amp;lt;/upper&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;/limit&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/axis&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;/joint&amp;gt;&lt;/span&gt;
+      &lt;span class="cm"&gt;&amp;lt;!-- Replaced Gazebo&amp;#39;s differential drive plugin with the ROS-friendly variant --&amp;gt;&lt;/span&gt;
+      &lt;span class="cm"&gt;&amp;lt;!--&lt;/span&gt;
+&lt;span class="cm"&gt;      &amp;lt;plugin filename=&amp;quot;libDiffDrivePlugin.so&amp;quot; name=&amp;quot;diff_drive&amp;quot;&amp;gt;&lt;/span&gt;
+&lt;span class="cm"&gt;      &amp;lt;left_joint&amp;gt;left_wheel_hinge&amp;lt;/left_joint&amp;gt;&lt;/span&gt;
+&lt;span class="cm"&gt;      &amp;lt;right_joint&amp;gt;right_wheel_hinge&amp;lt;/right_joint&amp;gt;&lt;/span&gt;
+&lt;span class="cm"&gt;      &amp;lt;torque&amp;gt;5&amp;lt;/torque&amp;gt;&lt;/span&gt;
+&lt;span class="cm"&gt;      &amp;lt;/plugin&amp;gt;&lt;/span&gt;
+&lt;span class="cm"&gt;      --&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;plugin&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;differential_drive_controller&amp;quot;&lt;/span&gt; &lt;span class="na"&gt;filename=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;libgazebo_ros_diff_drive.so&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;alwaysOn&amp;gt;&lt;/span&gt;true&lt;span class="nt"&gt;&amp;lt;/alwaysOn&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;updateRate&amp;gt;&lt;/span&gt;100&lt;span class="nt"&gt;&amp;lt;/updateRate&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;leftJoint&amp;gt;&lt;/span&gt;left_wheel_hinge&lt;span class="nt"&gt;&amp;lt;/leftJoint&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;rightJoint&amp;gt;&lt;/span&gt;right_wheel_hinge&lt;span class="nt"&gt;&amp;lt;/rightJoint&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;wheelSeparation&amp;gt;&lt;/span&gt;0.39&lt;span class="nt"&gt;&amp;lt;/wheelSeparation&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;wheelDiameter&amp;gt;&lt;/span&gt;0.15&lt;span class="nt"&gt;&amp;lt;/wheelDiameter&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;torque&amp;gt;&lt;/span&gt;5&lt;span class="nt"&gt;&amp;lt;/torque&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;commandTopic&amp;gt;&lt;/span&gt;cmd_vel&lt;span class="nt"&gt;&amp;lt;/commandTopic&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;odometryTopic&amp;gt;&lt;/span&gt;odom&lt;span class="nt"&gt;&amp;lt;/odometryTopic&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;odometryFrame&amp;gt;&lt;/span&gt;odom&lt;span class="nt"&gt;&amp;lt;/odometryFrame&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;robotBaseFrame&amp;gt;&lt;/span&gt;chassis&lt;span class="nt"&gt;&amp;lt;/robotBaseFrame&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;/plugin&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;pose&amp;gt;&lt;/span&gt;0 0 0 0 -0 0&lt;span class="nt"&gt;&amp;lt;/pose&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;static&amp;gt;&lt;/span&gt;0&lt;span class="nt"&gt;&amp;lt;/static&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;/model&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;state&lt;/span&gt; &lt;span class="na"&gt;world_name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;default&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;sim_time&amp;gt;&lt;/span&gt;85 304000000&lt;span class="nt"&gt;&amp;lt;/sim_time&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;real_time&amp;gt;&lt;/span&gt;85 849190220&lt;span class="nt"&gt;&amp;lt;/real_time&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;wall_time&amp;gt;&lt;/span&gt;1432260579 736436496&lt;span class="nt"&gt;&amp;lt;/wall_time&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;model&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;ground_plane&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;pose&amp;gt;&lt;/span&gt;0 0 0 0 -0 0&lt;span class="nt"&gt;&amp;lt;/pose&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;link&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;link&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;pose&amp;gt;&lt;/span&gt;0 0 0 0 -0 0&lt;span class="nt"&gt;&amp;lt;/pose&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;velocity&amp;gt;&lt;/span&gt;0 0 0 0 -0 0&lt;span class="nt"&gt;&amp;lt;/velocity&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;acceleration&amp;gt;&lt;/span&gt;0 0 0 0 -0 0&lt;span class="nt"&gt;&amp;lt;/acceleration&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;wrench&amp;gt;&lt;/span&gt;0 0 0 0 -0 0&lt;span class="nt"&gt;&amp;lt;/wrench&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/link&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;/model&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;model&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;pioneer2dx&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;pose&amp;gt;&lt;/span&gt;-0.103826 0.027961 2e-06 -2e-06 -8e-06 -0.094162&lt;span class="nt"&gt;&amp;lt;/pose&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;link&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;chassis&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;pose&amp;gt;&lt;/span&gt;-0.103827 0.027961 0.160002 -2e-06 -8e-06 -0.094162&lt;span class="nt"&gt;&amp;lt;/pose&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;velocity&amp;gt;&lt;/span&gt;-0.000797 0.002229 0.003363 -0.024657 -0.007301 0.0023&lt;span class="nt"&gt;&amp;lt;/velocity&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;acceleration&amp;gt;&lt;/span&gt;0 0 0 0 -0 0&lt;span class="nt"&gt;&amp;lt;/acceleration&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;wrench&amp;gt;&lt;/span&gt;0 0 0 0 -0 0&lt;span class="nt"&gt;&amp;lt;/wrench&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/link&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;link&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;left_wheel&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;pose&amp;gt;&lt;/span&gt;0.011714 0.187806 0.110002 1.38258 1.57033 2.85912&lt;span class="nt"&gt;&amp;lt;/pose&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;velocity&amp;gt;&lt;/span&gt;-0.000816 0.001565 0.000275 -0.014307 -0.006987 0.002012&lt;span class="nt"&gt;&amp;lt;/velocity&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;acceleration&amp;gt;&lt;/span&gt;0 0 0 0 -0 0&lt;span class="nt"&gt;&amp;lt;/acceleration&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;wrench&amp;gt;&lt;/span&gt;0 0 0 0 -0 0&lt;span class="nt"&gt;&amp;lt;/wrench&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/link&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;link&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;right_wheel&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;pose&amp;gt;&lt;/span&gt;-0.020254 -0.150688 0.110002 -1.56886 1.51434 -0.092322&lt;span class="nt"&gt;&amp;lt;/pose&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;velocity&amp;gt;&lt;/span&gt;-0.000347 0.001559 0.008433 -0.014387 -0.003243 0.000126&lt;span class="nt"&gt;&amp;lt;/velocity&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;acceleration&amp;gt;&lt;/span&gt;0 0 0 0 -0 0&lt;span class="nt"&gt;&amp;lt;/acceleration&amp;gt;&lt;/span&gt;
+          &lt;span class="nt"&gt;&amp;lt;wrench&amp;gt;&lt;/span&gt;0 0 0 0 -0 0&lt;span class="nt"&gt;&amp;lt;/wrench&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;/link&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;/model&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;/state&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;gui&lt;/span&gt; &lt;span class="na"&gt;fullscreen=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;0&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;camera&lt;/span&gt; &lt;span class="na"&gt;name=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;user_camera&amp;quot;&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;pose&amp;gt;&lt;/span&gt;5 -5 2 0 0.275643 2.35619&lt;span class="nt"&gt;&amp;lt;/pose&amp;gt;&lt;/span&gt;
+        &lt;span class="nt"&gt;&amp;lt;view_controller&amp;gt;&lt;/span&gt;orbit&lt;span class="nt"&gt;&amp;lt;/view_controller&amp;gt;&lt;/span&gt;
+      &lt;span class="nt"&gt;&amp;lt;/camera&amp;gt;&lt;/span&gt;
+    &lt;span class="nt"&gt;&amp;lt;/gui&amp;gt;&lt;/span&gt;
+  &lt;span class="nt"&gt;&amp;lt;/world&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;/sdf&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;p&gt;Open a terminal window and start the ROS middleware by entering:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ roscore
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Open another terminal window, &lt;code&gt;cd&lt;/code&gt; to the folder containing &lt;code&gt;pioneer2dx_ros.world&lt;/code&gt; and enter:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ rosrun gazebo_ros gazebo -file pioneer2dx_ros.world
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;You should now have a Gazebo window opened with a Pioneer 2DX placed in the middle of an empty world.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Gazebo GUI" src="https://xperroni.me/images/articles/2015-05-21-01/snapshot.png"&gt;&lt;/p&gt;
+&lt;p&gt;Finally, open a third terminal window (it's the last one, I promise) and check if the differential drive topics have been published:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ rostopic list
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The following topics should be visible, among others:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;/pioneer2dx/cmd_vel
+/pioneer2dx/odom
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;You should now be able to get the robot moving by publishing messages to the &lt;code&gt;/pioneer2dx/cmd_vel&lt;/code&gt; topic, e.g.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ rostopic pub -1 /pioneer2dx/cmd_vel geometry_msgs/Twist &lt;span class="se"&gt;\&lt;/span&gt;
+&lt;span class="s1"&gt;&amp;#39;{linear: {x: 1.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 1.0}}&amp;#39;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Should get the robot running in a loop.&lt;/p&gt;</content><category term="Code"></category><category term="Robotics"></category><category term="Tutorial"></category><category term="ROS"></category></entry><entry><title>A Python API for Lego MINDSTORMS NXT Alpha Rex Design</title><link href="https://xperroni.me/a-python-api-for-lego-mindstorms-nxt-alpha-rex-design.html" rel="alternate"></link><published>2011-01-19T17:01:00-05:00</published><updated>2011-01-19T17:01:00-05:00</updated><author><name>Helio Perroni Filho</name></author><id>tag:xperroni.me,2011-01-19:/a-python-api-for-lego-mindstorms-nxt-alpha-rex-design.html</id><summary type="html">&lt;p&gt;How to control an NXT robot with Python.&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;strong&gt;Update:&lt;/strong&gt; &lt;em&gt;a properly-commented version of the code below made it to the &lt;a href="http://nxt-python.googlecode.com/svn/trunk/examples/alpharex.py"&gt;nxt-python repository&lt;/a&gt;. Yay me! :P&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;Last week a friend of mine asked me to take his &lt;a href="http://en.wikipedia.org/wiki/Lego_Mindstorms_NXT"&gt;Lego MINDSTORMS NXT&lt;/a&gt; kit, build the &lt;a href="http://www.active-robots.com/products/mindstorms4schools/building-instructions.shtml"&gt;Alpha Rex&lt;/a&gt; design, and then demonstrate it to his father, who was a few days from returning to his home in Japan. Needless to say, having a chance to once again play with Lego – and in particular with the mind-blowingly nerdy, robotics-enabled NXT – was hardly unpleasant. In fact, while I was building the iconic bipedal robot – carefully and patiently following the instructions, taking the time to visualize how the pieces would fit together before actually connecting them, building the major parts before assembling them into the final model – I recognized just how similar to playing with Lego programming is, and how, during all those years of playtime, my mind was shaped for my current career in computing.&lt;/p&gt;
+&lt;p&gt;So it's no surprise that when it came to putting Alpha Rex to work, I snubbed NXT's &lt;a href="http://en.wikipedia.org/wiki/Lego_Mindstorms_NXT#NXT-G"&gt;Windows-based GUI tools&lt;/a&gt;, and looked instead for some way to program it from my Linux netbook, preferably in Python. Sure enough, after a little Googling, I stumbled at &lt;a href="http://code.google.com/p/nxt-python/"&gt;nxt-python&lt;/a&gt;, "a Python driver/interface for the Lego Mindstorms NXT robot". Though at first I was a little discouraged by the motor interface (I was expecting something more in line with NXT-G's, where you can send commands to up to all three motors simultaneously), eventually I was able to find my way around the API, and even come to admire its simplicity and straightforwardness.&lt;/p&gt;
+&lt;p&gt;The best part about nxt-python is Python itself. In just a couple hours I was able to write a rather sophisticated, object-oriented API to drive Alpha Rex and sample its various sensors – all in under 100 lines of code:&lt;/p&gt;
+&lt;table class="highlighttable"&gt;&lt;tr&gt;&lt;td class="linenos"&gt;&lt;div class="linenodiv"&gt;&lt;pre&gt;&lt;span class="normal"&gt; 1&lt;/span&gt;
+&lt;span class="normal"&gt; 2&lt;/span&gt;
+&lt;span class="normal"&gt; 3&lt;/span&gt;
+&lt;span class="normal"&gt; 4&lt;/span&gt;
+&lt;span class="normal"&gt; 5&lt;/span&gt;
+&lt;span class="normal"&gt; 6&lt;/span&gt;
+&lt;span class="normal"&gt; 7&lt;/span&gt;
+&lt;span class="normal"&gt; 8&lt;/span&gt;
+&lt;span class="normal"&gt; 9&lt;/span&gt;
+&lt;span class="normal"&gt;10&lt;/span&gt;
+&lt;span class="normal"&gt;11&lt;/span&gt;
+&lt;span class="normal"&gt;12&lt;/span&gt;
+&lt;span class="normal"&gt;13&lt;/span&gt;
+&lt;span class="normal"&gt;14&lt;/span&gt;
+&lt;span class="normal"&gt;15&lt;/span&gt;
+&lt;span class="normal"&gt;16&lt;/span&gt;
+&lt;span class="normal"&gt;17&lt;/span&gt;
+&lt;span class="normal"&gt;18&lt;/span&gt;
+&lt;span class="normal"&gt;19&lt;/span&gt;
+&lt;span class="normal"&gt;20&lt;/span&gt;
+&lt;span class="normal"&gt;21&lt;/span&gt;
+&lt;span class="normal"&gt;22&lt;/span&gt;
+&lt;span class="normal"&gt;23&lt;/span&gt;
+&lt;span class="normal"&gt;24&lt;/span&gt;
+&lt;span class="normal"&gt;25&lt;/span&gt;
+&lt;span class="normal"&gt;26&lt;/span&gt;
+&lt;span class="normal"&gt;27&lt;/span&gt;
+&lt;span class="normal"&gt;28&lt;/span&gt;
+&lt;span class="normal"&gt;29&lt;/span&gt;
+&lt;span class="normal"&gt;30&lt;/span&gt;
+&lt;span class="normal"&gt;31&lt;/span&gt;
+&lt;span class="normal"&gt;32&lt;/span&gt;
+&lt;span class="normal"&gt;33&lt;/span&gt;
+&lt;span class="normal"&gt;34&lt;/span&gt;
+&lt;span class="normal"&gt;35&lt;/span&gt;
+&lt;span class="normal"&gt;36&lt;/span&gt;
+&lt;span class="normal"&gt;37&lt;/span&gt;
+&lt;span class="normal"&gt;38&lt;/span&gt;
+&lt;span class="normal"&gt;39&lt;/span&gt;
+&lt;span class="normal"&gt;40&lt;/span&gt;
+&lt;span class="normal"&gt;41&lt;/span&gt;
+&lt;span class="normal"&gt;42&lt;/span&gt;
+&lt;span class="normal"&gt;43&lt;/span&gt;
+&lt;span class="normal"&gt;44&lt;/span&gt;
+&lt;span class="normal"&gt;45&lt;/span&gt;
+&lt;span class="normal"&gt;46&lt;/span&gt;
+&lt;span class="normal"&gt;47&lt;/span&gt;
+&lt;span class="normal"&gt;48&lt;/span&gt;
+&lt;span class="normal"&gt;49&lt;/span&gt;
+&lt;span class="normal"&gt;50&lt;/span&gt;
+&lt;span class="normal"&gt;51&lt;/span&gt;
+&lt;span class="normal"&gt;52&lt;/span&gt;
+&lt;span class="normal"&gt;53&lt;/span&gt;
+&lt;span class="normal"&gt;54&lt;/span&gt;
+&lt;span class="normal"&gt;55&lt;/span&gt;
+&lt;span class="normal"&gt;56&lt;/span&gt;
+&lt;span class="normal"&gt;57&lt;/span&gt;
+&lt;span class="normal"&gt;58&lt;/span&gt;
+&lt;span class="normal"&gt;59&lt;/span&gt;
+&lt;span class="normal"&gt;60&lt;/span&gt;
+&lt;span class="normal"&gt;61&lt;/span&gt;
+&lt;span class="normal"&gt;62&lt;/span&gt;
+&lt;span class="normal"&gt;63&lt;/span&gt;
+&lt;span class="normal"&gt;64&lt;/span&gt;
+&lt;span class="normal"&gt;65&lt;/span&gt;
+&lt;span class="normal"&gt;66&lt;/span&gt;
+&lt;span class="normal"&gt;67&lt;/span&gt;
+&lt;span class="normal"&gt;68&lt;/span&gt;
+&lt;span class="normal"&gt;69&lt;/span&gt;
+&lt;span class="normal"&gt;70&lt;/span&gt;
+&lt;span class="normal"&gt;71&lt;/span&gt;
+&lt;span class="normal"&gt;72&lt;/span&gt;
+&lt;span class="normal"&gt;73&lt;/span&gt;
+&lt;span class="normal"&gt;74&lt;/span&gt;
+&lt;span class="normal"&gt;75&lt;/span&gt;
+&lt;span class="normal"&gt;76&lt;/span&gt;
+&lt;span class="normal"&gt;77&lt;/span&gt;
+&lt;span class="normal"&gt;78&lt;/span&gt;
+&lt;span class="normal"&gt;79&lt;/span&gt;
+&lt;span class="normal"&gt;80&lt;/span&gt;
+&lt;span class="normal"&gt;81&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/td&gt;&lt;td class="code"&gt;&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;time&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;sleep&lt;/span&gt;
+
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;nxt.brick&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;Brick&lt;/span&gt;
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;nxt.locator&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;find_one_brick&lt;/span&gt;
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;nxt.motor&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;Motor&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;PORT_A&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;PORT_B&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;PORT_C&lt;/span&gt;
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;nxt.sensor&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;Light&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Sound&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Touch&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Ultrasonic&lt;/span&gt;
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;nxt.sensor&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;PORT_1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;PORT_2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;PORT_3&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;PORT_4&lt;/span&gt;
+
+
+&lt;span class="n"&gt;FORTH&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;100&lt;/span&gt;
+&lt;span class="n"&gt;BACK&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;100&lt;/span&gt;
+
+
+&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;AlphaRex&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;object&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="fm"&gt;__init__&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;brick&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;NXT&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="nb"&gt;isinstance&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;brick&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;basestring&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+            &lt;span class="n"&gt;brick&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;find_one_brick&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;brick&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+        &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;brick&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;brick&lt;/span&gt;
+        &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;arms&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Motor&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;brick&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;PORT_A&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;legs&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;Motor&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;brick&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;PORT_B&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="n"&gt;Motor&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;brick&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;PORT_C&lt;/span&gt;&lt;span class="p"&gt;)]&lt;/span&gt;
+
+        &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;touch&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Touch&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;brick&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;PORT_1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;sound&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Sound&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;brick&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;PORT_2&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;light&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Light&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;brick&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;PORT_3&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ultrasonic&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Ultrasonic&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;brick&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;PORT_4&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;echolocate&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ultrasonic&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get_sample&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;feel&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;touch&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get_sample&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;hear&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;sound&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get_sample&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;say&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;line&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;times&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;times&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+            &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;brick&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;play_sound_file&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kc"&gt;False&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;line&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;.rso&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="n"&gt;sleep&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;see&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;light&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get_sample&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;walk&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;secs&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;power&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;FORTH&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;motor&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;legs&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="n"&gt;motor&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;run&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;power&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;power&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+        &lt;span class="n"&gt;sleep&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;secs&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;motor&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;legs&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="n"&gt;motor&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;idle&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;wave&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;secs&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;power&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;100&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;arms&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;run&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;power&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;power&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="n"&gt;sleep&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;secs&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;arms&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;idle&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;wave_and_talk&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+    &lt;span class="n"&gt;robot&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;AlphaRex&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="n"&gt;robot&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;wave&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;robot&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;say&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Object&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;walk_forth_and_back&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+    &lt;span class="n"&gt;robot&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;AlphaRex&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="n"&gt;robot&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;walk&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;FORTH&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;robot&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;walk&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;BACK&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;walk_to_object&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+    &lt;span class="n"&gt;robot&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;AlphaRex&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="k"&gt;while&lt;/span&gt; &lt;span class="n"&gt;robot&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;echolocate&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="n"&gt;robot&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;walk&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;FORTH&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="n"&gt;robot&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;say&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Object.rso&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="vm"&gt;__name__&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;__main__&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="n"&gt;wave_and_talk&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;p&gt;Playing with Alpha Rex was real fun, but now I'm afraid my next move (since my friend allowed me to keep the kit a while longer) will be to dismantle it. Unable to turn around or move its ultrasound sensors, it's rather limited in its navigation capabilities – and I'm dying to check out whether I can build a &lt;a href="http://en.wikipedia.org/wiki/Simultaneous_localization_and_mapping"&gt;SLAM&lt;/a&gt;-capable robot out of the basic kit. At any rate, it'll certainly be pleasant to try.&lt;/p&gt;</content><category term="Code"></category><category term="Robotics"></category><category term="Tutorial"></category><category term="Python"></category></entry><entry><title>ChatterBean's Last Source Package</title><link href="https://xperroni.me/chatterbeans-last-source-package.html" rel="alternate"></link><published>2010-06-07T12:52:00-04:00</published><updated>2010-06-07T12:52:00-04:00</updated><author><name>Helio Perroni Filho</name></author><id>tag:xperroni.me,2010-06-07:/chatterbeans-last-source-package.html</id><summary type="html">&lt;p&gt;What Chatterbean was and where to download its last source package.&lt;/p&gt;</summary><content type="html">&lt;p&gt;ChatterBean was my first personal, open-ended, open-source project. In 2006 I stopped working on it due to lack of time, dissatisfaction with the results of my own efforts, and a growing disillusionment with the chat bot paradigm as a whole (more about that in a future post). Then in 2007 I started my MSc course on artificial vision, prompting a change in research interests – from abstract rule-based to real-world statistical systems – that buried any lingering hopes that I would resume my work on chat bots.&lt;/p&gt;
+&lt;p&gt;ChatterBean was abandoned before it could stand on its own either as a user application or developer framework; despite that, to this day I receive requests from programmers intending to use it as a basis for their own projects. Since the original project page went away along with Geocities, there has been no way to get the project's code other than asking me directly, but now I have uploaded the last source package to &lt;a href="https://sites.google.com/site/machineawakeningsvault/home/chatterbean.src.00.008.zip"&gt;Google Sites&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;The package contains the Java sources, AIML scraps used in the automated tests, and a copy of the project page as way of documentation. ChatterBean is (was?) licensed under the GPL, so it's pretty much open for whatever you might want to do with it.&lt;/p&gt;
+&lt;p&gt;Have fun.&lt;/p&gt;</content><category term="Code"></category><category term="AI"></category><category term="Project"></category><category term="Java"></category></entry></feed>
